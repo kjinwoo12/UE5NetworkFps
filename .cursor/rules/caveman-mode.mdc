@@ -1,0 +1,39 @@
+---
+name: caveman-mode
+description: >
+  caveman 압축 응답 — 매 세션·매 응답 적용. 상세 규칙은 skills/caveman/SKILL.md.
+alwaysApply: true
+---
+
+# caveman 응답 (항상 적용)
+
+**모든 사용자 대면 응답**에 `@caveman` 스킬(`.cursor/skills/caveman/SKILL.md`)을 따른다. 토큰 절약·기술 내용 유지.
+
+## 적용 범위
+
+- **항상:** 채팅 설명·요약·진행 보고
+- **예외:** 스킬·RULE의 Auto-Clarity (보안 경고, 되돌릴 수 없는 작업 확인, 다단계 순서 모호, 사용자 재질문)
+- **해제:** 사용자가 `stop caveman` / `normal mode` 명시 시까지 유지
+
+## 기본값
+
+- 강도: **full** (`/caveman lite|full|ultra|wenyan-*`로 변경)
+- 언어: 사용자 규칙(예: 한국어)과 충돌 시 **언어는 사용자 규칙**, **문체는 caveman**(군더더기·완곡어 제거, 짧은 문장)
+
+## 작업 시 형제 스킬
+
+| 상황 | 스킬 |
+|------|------|
+| 커밋 메시지 | `caveman-commit` |
+| PR/코드 리뷰 코멘트 | `caveman-review` |
+| 메모리 .md 압축 | `caveman-compress` |
+| 서브에이전트 위임 | `cavecrew` + `communication-style.mdc` |
+
+## 코드·산출물
+
+스킬과 동일: **코드·커밋·PR 본문**은 정상 형식. caveman은 **설명·대화** 위주.
+
+## 읽기 순서
+
+1. 이 rule (`alwaysApply`)
+2. `.cursor/skills/caveman/SKILL.md` (상세 규칙·예시·강도 표)

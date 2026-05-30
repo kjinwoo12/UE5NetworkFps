@@ -1,0 +1,56 @@
+---
+description: 언어 무관 — 레이어·공개 계약·변경 체크리스트 (globs 이식 시 필수 조정)
+globs: "result/**/*.{md,mdc},.cursor/**/*.{md,mdc}"
+alwaysApply: false
+---
+
+# 스택 공통 규칙 (레이어·계약)
+
+> **이식 시** frontmatter `globs`를 `project-domain.mdc`의 `{{SOURCE_GLOBS}}`로 교체한다.
+
+언어별 문법·패키지는 `stack-*.mdc` 오버레이. 여기는 **경계와 변경 순서**만 다룬다.
+
+## 레이어 (권장)
+
+| 레이어 | 역할 | 하지 말 것 |
+|--------|------|------------|
+| **어댑터** (`{{HANDLERS_DIR}}`) | HTTP·CLI·메시지·UI 이벤트 → 앱 호출 | 비즈니스 규칙·SQL·외부 API 세부 |
+| **애플리케이션** (`{{SERVICES_DIR}}`) | 유스케이스·오케스트레이션 | 프레임워크 Request/Response 직접 조립 |
+| **도메인** (선택) | 순수 규칙·엔티티 | 인프라 import |
+| **DTO·계약** (`{{DTO_DIR}}`) | 입출력·공개 타입 | DB 연결·네트워크 |
+| **인프라** (`{{PERSISTENCE_DIR}}`) | DB·파일·외부 API 구현 | UI·라우팅 정책 |
+
+어댑터가 비대해지면 애플리케이션/도메인으로 추출. 테스트·목도 같은 경계.
+
+## 구현 vs 목표
+
+- **구현 완료:** `{{CONTRACT_REGISTER}}`에 등록된 항목 + 테스트 통과
+- **목표만:** `{{SPEC_DOCS}}` — 등록·코드 확인 전 신뢰 금지
+
+```bash
+ls .cursor/rules .cursor/skills 2>/dev/null
+```
+
+## 변경 체크리스트 (공개 기능)
+
+1. `{{DTO_DIR}}` — 계약 타입
+2. `{{HANDLERS_DIR}}` — 어댑터
+3. `{{CONTRACT_REGISTER}}` — 라우트·export·스키마 등록
+4. 테스트 — RULE-06
+5. DB 변경 시 `{{MIGRATIONS_DIR}}` — RULE-03
+
+## 의존 방향
+
+```
+어댑터 → 애플리케이션 → (도메인) → 인프라
+```
+
+역방향 import 금지 (인프라가 어댑터/DTO 참조하지 않음).
+
+## 설계 검토
+
+`solid-principles.mdc`, `@solid-review`.
+
+## 금지 (공통)
+
+RULE-01 비밀 · RULE-04 경계 위반 · RULE-05 지침 무단 수정

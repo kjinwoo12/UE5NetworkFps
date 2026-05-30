@@ -1,0 +1,71 @@
+---
+description: UE5NetworkFps — UE5.7 FPS, Content·1P 캐릭터·애니·CtrlRig
+alwaysApply: true
+---
+
+# UE5NetworkFps
+
+**타입:** `game` (Blueprint·Content 중심, C++ 모듈 껍데기)  
+**엔진:** 5.7 (`UE5NetworkFps.uproject`). 활성 에이전트 지침은 `.cursor/`만.
+
+## 구현 상태 (코드 기준)
+
+문서·채팅만 믿지 않는다. `Content/`, `Source/`, `.cursor/rules/*.mdc`를 확인한다.
+
+| 종류 | 식별자·경로 | 상태 | 비고 |
+|------|-------------|------|------|
+| 1P 캐릭터 | `/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter` | 구현 | `FirstPersonMesh`, `FirstPersonCamera`, `Aim` |
+| 1P 애니 | `/Game/FirstPerson/Anims/ABP_FP_Copy` | 구현 | Control Rig 노드 → `CtrlRig_FPWarp` |
+| 1P 리그 | `/Game/FirstPerson/Anims/CtrlRig_FPWarp` | 구현·튜닝 중 | spine pullback, `BodyOffset`, FABRIK |
+| 1P 카메라 매니저 | `BP_FirstPersonCameraManager` | 구현 | ViewPitch 등 (클래스 디폴트) |
+| 프로젝트 레벨 | `Content/NetworkFps/` | 진행 | 예: `Level/Demo/L_PlayerCharacterDemo` |
+| 3P 템플릿 | `Content/ThirdPerson/` | 구현 | FP와 병행 |
+| C++ 게임 모듈 | `Source/UE5NetworkFps/` | 최소 | 대부분 BP·에셋 |
+| 사람용 문서 | `Docs/` | 구현 | 포폴·온보딩; README + 01~05 |
+| 자동 테스트 | — | 없음 | PIE·수동 검증 |
+
+## 레이아웃
+
+| 항목 | 경로 |
+|------|------|
+| 프로젝트 루트 | `UE5NetworkFps.uproject` |
+| 콘텐츠 | `Content/` (`FirstPerson`, `ThirdPerson`, `NetworkFps`, `Characters`, `Weapons`, `Input`) |
+| 설정 | `Config/` (`DefaultEngine.ini`, `DefaultInput.ini`, …) |
+| C++ | `Source/UE5NetworkFps/` |
+| 사람용 문서 | `Docs/` (에이전트 지침 아님 — 상세·타임라인) |
+| 에이전트 지침 | `.cursor/rules/`, `.cursor/skills/` |
+
+## 1인칭 캐릭터 (작업 시)
+
+- **컴포넌트:** 3P `Mesh`(Owner No See), 1P `FirstPersonMesh`(Only Owner See), `FirstPersonCamera`.
+- **First Person Rendering:** 로컬 1P에서 **전신 메시가 보이는 것은 템플릿 정상** (클래식 FPS와 다름). 상세 `Docs/03-first-person-character.md`.
+- **ViewPitch:** `BP_FirstPersonCameraManager` — 대략 **−70° ~ +80°** (바닥 90° 불가). 클리핑 트레이드오프. 상세 `Docs/04-technical-investigations.md`.
+- **오프셋 관례:** 메시 Z **−20**, 카메라 Z **+20** → 캡슐/루트 기준 시선 원점. 지상 OK, **점프 시** 1P 메시·카메라 겹침 이슈 있음.
+- **클리핑·점프:** `CtrlRig_FPWarp`로 상체 보정. 권장: `ABP_FP_Copy`에서 `IsFalling`/`IsMovingOnGround` → 리그 spine **Weight 증가**, 공중 **Leg FABRIK off**. 카메라 오프셋만으로는 점프 상체 애니 상쇄 한계.
+- **조사:** uasset 직접 읽기 어려움 → UnrealMCP `read_blueprint_content` / 에디터 Details.
+
+## 환경·실행
+
+- 로컬: UE 5.7 에디터로 `.uproject` 열기
+- 플러그인: `UnrealMCP` (에디터 자동화)
+- RULE-02: **해당** — 게임 스레드에서 blocking I/O·과도 CPU 금지 (`stack-unreal.mdc` 참고)
+- RULE-03: N/A | RULE-04: N/A (단일 repo)
+
+## 작업 규칙
+
+1. `.cursor/` 변경: RULE-05 — `@self-update` 승인 또는 「커서 지침 업데이트」
+2. FP·애니·리그는 `Content/FirstPerson/` 우선; 게임 전용은 `Content/NetworkFps/`
+3. `Config/DefaultEditor.ini` 등 에디터 전용 변경은 게임 런타임과 무관 — 커밋 시 구분
+4. 의미 있는 마일스톤·조사 완료 시 **`Docs/05-development-log.md`** (필요 시 03·04) 갱신 — `.cursor/`와 중복 최소화
+
+## 자주 하는 실수
+
+- `project-domain`이 template library로 남아 있음 → 경로·역할 오판
+- 1P 메시를 카메라 자식으로 두고 리그·컴포넌트 Z 오프셋 **이중 적용**
+- 점프 겹침을 ViewPitch만으로 해결하려 함 (상체 애니·IK 확인 필요)
+- 1P에서 몸·다리 보임을 **버그**로 오인 (First Person Rendering 의도)
+- 장기 기록을 `.cursor/rules/`에만 쓰려 함 → **`Docs/`** 가 사람·포폴용
+
+## 지침 갱신
+
+- `@self-update` / 「커서 지침 업데이트」

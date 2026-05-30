@@ -1,0 +1,35 @@
+---
+description: Unreal Engine 5 — Content·애니·게임 스레드 (UE5NetworkFps)
+globs: "Content/**/*.{uasset,umap,ini},Source/**/*.{h,cpp,cs},Config/**/*.ini"
+alwaysApply: false
+---
+
+# Unreal Engine (이 프로젝트)
+
+## 변경 순서 (공개 플레이어 경험)
+
+1. BP·AnimBP·Control Rig (`Content/`)
+2. 입력·맵·게임모드 (`Content/Input`, `Content/*/Blueprints`)
+3. C++는 모듈 API·성능 필요 시만 (`Source/UE5NetworkFps/`)
+4. 자동 테스트 없음 → PIE·멀티 PIE로 수동 검증
+
+## 1P 카메라
+
+- Look 입력 → `AddControllerPitchInput` → **`BP_FirstPersonCameraManager`** 가 Pitch 클램프.
+- 템플릿 `ViewPitchMin`/`Max` 대략 **−70° / +80°** — 아래 90°·클리핑 트레이드오프.
+- 시선 한계·클리핑 조사 상세: `Docs/04-technical-investigations.md`.
+
+## 애니·Control Rig
+
+- FP AnimBP: `ABP_FP_Copy` → `CtrlRig_FPWarp`.
+- 리그는 **포즈 후처리**(spine pullback, IK). 점프 안정화: AnimBP에서 이동 상태를 리그 **Weight/IK 스위치**로 넘김.
+- `.uasset` 바이너리: grep 한계; MCP·에디터로 그래프·Details 확인.
+
+## 게임 스레드 (RULE-02)
+
+- `Tick`/애니 블루프린트/`ConstructObject` 경로에서 sync 파일·HTTP·대량 trace 금지.
+- 무거운 작업: `AsyncTask`, 서브시스템, 백그라운드 + 게임 스레드 마샬alling.
+
+## 네트워크 (향후)
+
+- 복제: `ControlRotation` vs 1P 전용 메시·리그 보정 분리. 1P 리그 과보정은 **로컬 오너** 위주.

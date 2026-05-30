@@ -1,0 +1,66 @@
+---
+name: subagent-delegation
+description: >
+  서브에이전트 위임 가이드 — 조사·소규모 편집·리뷰 시 메인 컨텍스트 절약.
+  압축 출력 프리셋(cavecrew 등) 또는 vanilla Explore/Code Reviewer 선택.
+alwaysApply: true
+---
+
+# 서브에이전트 위임
+
+**응답 문체:** `instruction-ecosystem.mdc`의 caveman 강제 절 적용. 메인 최종 답도 caveman(Auto-Clarity 예외만 일반 문장).
+
+동일 작업을 메인 스레드·vanilla Explore·압축 프리셋 중 어디에 둘지 판단한다.  
+**도구 결과는 메인 컨텍스트에 그대로 주입**되므로, 장시간 세션에서는 출력 토큰을 줄이는 프리셋이 유리하다.
+
+## When to delegate
+
+| Task | 권장 |
+|------|------|
+| 정의 위치 / 호출처 / 사용처 목록 | 압축 조사 프리셋 또는 `Explore` |
+| 조사 + 아키텍처 코멘트 필요 | `Explore` (vanilla) |
+| 명확한 1~2파일 수정 | 압축 빌더 또는 메인 스레드 |
+| 3파일 이상·횡단 리팩터 | 메인 스레드 또는 설계 에이전트 |
+| diff/브랜치 버그 리뷰 | 압축 리뷰어 |
+| 설계 근거·대안까지 리뷰 | `Code Reviewer` (vanilla) |
+| 이미 아는 한 줄 답 | 메인 스레드, 위임 없음 |
+
+**요약:** 출력을 1/3 토큰으로 줄이고 싶으면 압축 프리셋, 설명이 필요하면 vanilla.
+
+## Output contracts (압축 프리셋 예)
+
+**조사**
+```
+<Header>:
+- path:line — `symbol` — short note
+totals: <counts>.
+```
+
+**빌드**
+```
+<path:line-range> — <change ≤10 words>.
+verified: <re-read OK | mismatch @ path:line>.
+```
+
+**리뷰**
+```
+path:line: <severity>: <problem>. <fix>.
+totals: N critical / N warn / …
+```
+
+## Chaining
+
+1. 조사 → 2. 메인이 1~2곳 선택 → 3. 소규모 수정 → 4. 리뷰
+
+병렬 조사: 서로 다른 각도(정의 / 호출 / 테스트)로 2~3개 동시 spawn.
+
+## What NOT to do
+
+- 파일 위치 모를 때 소규모 빌더만 던지지 않는다 → 조사 먼저.
+- 5파일 리팩터를 조사→빌더 체인으로 넘기지 않는다 → `too-big` 낭비.
+- 압축 리뷰어에 “전반적 의견” 요청하지 않는다 → vanilla 리뷰어.
+- 사람이 읽을 최종 답은 메인 스레드에서 정리 — 문체는 `caveman-mode.mdc`(Auto-Clarity 예외 시 일반 문장).
+
+## Clarity
+
+보안·되돌릴 수 없는 작업·오해 가능한 단문은 **일반 문장**으로 명확히 한 뒤, 필요 시 압축 형식으로 복귀.

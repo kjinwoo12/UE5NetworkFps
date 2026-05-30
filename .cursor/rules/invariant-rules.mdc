@@ -1,0 +1,107 @@
+---
+description: 불변 제약 — 보안·계약·데이터·지침 (언어·환경 공통, 이식 시 조정)
+alwaysApply: true
+---
+
+# 불변 제약 (RULES)
+
+**10개 미만.** 작업 전 확인, 완료 전 self-check.  
+해당 없는 RULE은 삭제하지 말고 **비활성 주석** + `project-domain.mdc`에 N/A 표기.
+
+---
+
+### RULE-01 비밀·자격 증명을 커밋하지 않는다
+
+**위반 시:** 키 노출·로테이션·보안 사고.
+
+금지: `.env` 실파일, API 키·비밀번호·인증서 **실값** 커밋.
+
+```bash
+git diff --cached | rg -i 'secret|password|api[_-]?key|private[_-]?key|token' || true
+```
+
+---
+
+### RULE-02 동시성·응답 경로에서 blocking I/O를 쓰지 않는다
+
+**위반 시:** 지연·데드락·프레임 드롭·처리량 급락.
+
+금지 (해당 모델일 때):
+
+- **비동기 HTTP/RPC** 핸들러 안 동기 DB·`sleep`·동기 HTTP
+- **UI/게임 메인 스레드**에서 장시간 디스크·네트워크·무거운 CPU
+- **이벤트 루프·워커 큐** 점유형 동기 호출
+
+```bash
+# 게임 스레드: sync I/O·sleep·과도 CPU 금지 (상세 stack-unreal.mdc)
+git diff --cached -- 'Source/**' 'Content/**' 2>/dev/null | head -5 || true
+```
+
+> 이 repo: RULE-02 **해당** (UE 게임 스레드). 상세: `stack-unreal.mdc`.
+
+---
+
+### RULE-03 영속 스키마 변경 시 마이그레이션을 함께 둔다
+
+**위반 시:** 스키마·코드 불일치, 데이터 손상.
+
+DB·스키마를 버전 관리하는 프로젝트만 적용. `{{MIGRATIONS_DIR}}` 없이 테이블·컬럼만 배포 금지.
+
+```bash
+# N/A — no persistence layer
+true
+```
+
+> 이 repo: RULE-03 N/A.
+
+---
+
+### RULE-04 지정 저장소·모듈에만 해당 코드를 둔다
+
+**위반 시:** 클라이언트/서버·서브모듈·패키지 버전 엇갈림.
+
+단일 repo — 서브모듈·금지 복제 경로 없음.
+
+> 이 repo: RULE-04 N/A.
+
+---
+
+### RULE-05 Cursor 지침을 에이전트가 단독으로 수정하지 않는다
+
+**위반 시:** 팀 지침 희석.
+
+금지: `.cursor/rules/*.mdc`, `.cursor/skills/*` 무단 편집; `.cursor/` 아래 에이전트용 `.md` 신규.
+
+허용: `@self-update` diff → **승인** 후 반영; 사용자 「커서 지침 업데이트」.
+
+---
+
+### RULE-06 공개 계약 변경 시 등록부·타입·테스트를 함께 맞춘다
+
+**위반 시:** OpenAPI·SDK·클라이언트·CI가 서로 다른 계약.
+
+**필수 (해당 시):** 핸들러 + 계약 등록부 + DTO + 테스트.
+
+```bash
+# 공개 지침·스킬 변경 시
+ls .cursor/rules .cursor/skills 2>/dev/null || true
+echo "no test suite — template repo"
+```
+
+| 계약 종류 | 등록부 예 |
+|-----------|-----------|
+| REST | router, route table |
+| GraphQL | schema, resolvers |
+| gRPC | `.proto`, 서버 등록 |
+| CLI | command tree, `--help` |
+| 라이브러리 | public export / package index |
+
+내부 전용 코드만 변경 → RULE-06 해당 없음.
+
+---
+
+## RULE 추가 기준
+
+> DB 오염·인증 붕괴·계약 불일치·배포 실패가 **확실**한가?
+
+아니면 `project-domain.mdc`·`stack-conventions.mdc`·globs 규칙에 둔다.

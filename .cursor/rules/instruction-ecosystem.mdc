@@ -1,0 +1,76 @@
+---
+description: Cursor 지침 생태계 — 공통 규칙·오버레이·스킬·판단 트리
+alwaysApply: true
+---
+
+# Cursor 지침 생태계
+
+**에이전트 지침은 `.cursor/`의 `.mdc` + `skills/*/SKILL.md`만 사용한다.**
+
+## caveman 응답 (강제·매 턴)
+
+**모든 사용자 대면 설명·요약·진행 보고**는 caveman **full** 적용. 사용자 언어 규칙(예: 한국어) 있으면 **그 언어 + caveman**(군더더기·완곡어·인사말 제거, 짧은 문장·조각 OK). 기술 용어·코드·에러 문자열은 정확히.
+
+| 구분 | 규칙 |
+|------|------|
+| 지속 | 매 응답 유지. 해제는 `stop caveman` / `normal mode`만 |
+| 코드·커밋·PR 본문 | 정상 형식 (caveman 아님) |
+| Auto-Clarity | 보안 경고, 되돌릴 수 없는 작업 확인, 순서 모호한 다단계, 압축으로 오해 가능, 사용자 재질문 → 잠깐 일반 문장 후 caveman 복귀 |
+| 형제 스킬 | 커밋 `caveman-commit`, 리뷰 `caveman-review`, 위임 `cavecrew` |
+
+상세·강도: `rules/caveman-mode.mdc`, `skills/caveman/SKILL.md`. 작업 시작 시 `skills/caveman/SKILL.md`를 **읽지 않아도** 이 절을 따른다.
+
+## 레이어 구성
+
+| 레이어 | 경로 | 역할 |
+|--------|------|------|
+| 공통 | `rules/instruction-ecosystem.mdc` | 진입·판단 트리 |
+| 공통 | `rules/invariant-rules.mdc` | 불변 제약 |
+| 공통 | `rules/project-domain.mdc` | 이 repo 도메인·레이아웃 |
+| 공통 | `rules/stack-conventions.mdc` | 레이어·계약 (언어 무관) |
+| 공통 | `rules/solid-principles.mdc` | SOLID (globs 조정) |
+| 선택 | `rules/stack-*.mdc` | 언어·프레임워크 (`overlays/stacks/`에서 복사) |
+| 선택 | `rules/env-*.mdc` | 모노레포·게임 등 (`overlays/environments/`) |
+| 공통 | `rules/communication-style.mdc` | 서브에이전트 위임 |
+| 공통 | `rules/caveman-mode.mdc` | caveman 압축 응답 (항상) |
+| 세션 | `rules/agent-local.mdc` | gitignore |
+| 공정 | `skills/*/SKILL.md` | `@task-start` 등 |
+
+**형식:** 팀 지침은 `.mdc`. `.cursor/`에 `AGENTS.md`·`RULES.md` 등 **에이전트용 `.md` 신규 금지** (스킬 `SKILL.md`만 예외).
+
+## 판단 트리
+
+```
+시스템이 실제로 망가지는가?     → invariant-rules.mdc
+세션마다 바뀌는가?             → agent-local.mdc
+작업 타입 전용 공정?           → skills/{name}/SKILL.md
+이 repo·도메인?              → project-domain.mdc
+언어·프레임워크·경로 패턴?   → stack-*.mdc, solid-principles (globs)
+저장소·클라이언트 경계?       → env-*.mdc
+사용자 대면 응답 문체?       → caveman-mode.mdc → skills/caveman/SKILL.md
+```
+
+## 작업 루프
+
+`@task-start` → 구현 → `@task-done` → (필요 시) `@self-update`
+
+| 호출 | 스킬 |
+|------|------|
+| `@task-start` | `skills/task-start/SKILL.md` |
+| `@task-done` | `skills/task-done/SKILL.md` |
+| `@solid-review` | `skills/solid-review/SKILL.md` |
+| `@self-update` | `skills/self-update/SKILL.md` |
+
+**지침 일괄 갱신:** 「커서 지침 업데이트」 → `rules/*.mdc` 코드 동기화 (RULE-05 예외).
+
+## 읽기 우선순위
+
+1. `invariant-rules.mdc`
+2. `project-domain.mdc` + `{{CONTRACT_SURFACE}}` (코드로 구현 상태 확인)
+3. `agent-local.mdc` (있으면)
+4. `caveman-mode.mdc` + `skills/caveman/SKILL.md` (사용자 대면 응답)
+5. `stack-*.mdc`, `env-*.mdc`, `solid-principles.mdc` (작업 경로 globs)
+
+## 사람용 문서
+
+`README.md`, `docs/`는 사람용. 에이전트 장기 지침은 `.cursor/rules/*.mdc` 우선.
