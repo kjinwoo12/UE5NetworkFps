@@ -40,7 +40,8 @@ alwaysApply: true
 - **컴포넌트:** 3P `Mesh`(Owner No See), 1P `FirstPersonMesh`(Only Owner See), `FirstPersonCamera`.
 - **First Person Rendering:** 로컬 1P에서 **전신 메시가 보이는 것은 템플릿 정상** (클래식 FPS와 다름). 상세 `Docs/03-first-person-character.md`.
 - **ViewPitch:** `BP_FirstPersonCameraManager` — 대략 **−70° ~ +80°** (바닥 90° 불가). 클리핑 트레이드오프. 상세 `Docs/04-technical-investigations.md`.
-- **오프셋 관례:** 메시 Z **−20**, 카메라 Z **+20** → 캡슐/루트 기준 시선 원점. 지상 OK, **점프 시** 1P 메시·카메라 겹침 이슈 있음.
+- **오프셋 관례:** `FirstPersonMesh` **Y −20**, `FirstPersonCamera` **Y +20** (Relative Location). 캡슐/루트 기준 시선·몸 분리. 지상 OK, **점프 시** 겹침 재발. UE Y=좌우 — 부모 회전 있으면 체감 방향 다를 수 있음 → PIE pelvis 확인.
+- **리그 vs 컴포넌트:** 몸 Y 분리는 `BodyOffset.Y`(동축)로 대체 가능; 카메라 Y는 BP 유지. 컴포넌트·리그 **동시** 같은 축 금지.
 - **클리핑·점프:** `CtrlRig_FPWarp`로 상체 보정. 권장: `ABP_FP_Copy`에서 `IsFalling`/`IsMovingOnGround` → 리그 spine **Weight 증가**, 공중 **Leg FABRIK off**. 카메라 오프셋만으로는 점프 상체 애니 상쇄 한계.
 - **조사:** uasset 직접 읽기 어려움 → UnrealMCP `read_blueprint_content` / 에디터 Details.
 
@@ -61,7 +62,7 @@ alwaysApply: true
 ## 자주 하는 실수
 
 - `project-domain`이 template library로 남아 있음 → 경로·역할 오판
-- 1P 메시를 카메라 자식으로 두고 리그·컴포넌트 Z 오프셋 **이중 적용**
+- 1P 메시를 카메라 자식으로 두고 리그·컴포넌트 **Y 오프셋** **이중 적용**
 - 점프 겹침을 ViewPitch만으로 해결하려 함 (상체 애니·IK 확인 필요)
 - 1P에서 몸·다리 보임을 **버그**로 오인 (First Person Rendering 의도)
 - 장기 기록을 `.cursor/rules/`에만 쓰려 함 → **`Docs/`** 가 사람·포폴용
