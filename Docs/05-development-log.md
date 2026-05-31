@@ -30,7 +30,7 @@
 | 1P에서 몸 보임 | First Person Rendering — 정상 동작으로 문서화 |
 | 카메라 아래 안 내려감 | `BP_FirstPersonCameraManager` ViewPitch 클램프 |
 | 아래 보기 클리핑 | 대안 비교 (피치 분리, 리그, 가시성) |
-| 몸 −20 / 카메라 +20 | 사용자 튜닝 적용 |
+| 몸 Y −20 / 카메라 Y +20 | 사용자 튜닝 적용 |
 | 점프 겹침 | `CtrlRig_FPWarp` 공중 stabilize 설계 |
 
 **에이전트 코드/BP 직접 수정:** 없음 (탐구·설계 중심)  
@@ -46,6 +46,11 @@
 
 
 
+### 2026-05-31 — 1P 오프셋 축·리그 지식 반영
+
+- 오프셋 축 **Z → Y** (`FirstPersonMesh` Y −20, `FirstPersonCamera` Y +20)
+- 리그 vs 컴포넌트: 몸 `BodyOffset.Y` 대체 가능, 카메라 BP 유지
+- `Docs/03`, `04`, `05` 동기화
 
 ---
 

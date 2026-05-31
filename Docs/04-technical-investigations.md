@@ -95,8 +95,8 @@ IA_Look / IA_MouseLook
 
 **사용자 적용:**
 
-- `FirstPersonMesh` Z = **−20**
-- `FirstPersonCamera` Z = **+20**
+- `FirstPersonMesh` **Y = −20**
+- `FirstPersonCamera` **Y = +20**
 - 루트 기준 카메라 위치 **(0,0,0)** 유지
 
 **결과:** 지상에서는 자연스러움. **점프 시** 겹침 재발.
@@ -119,7 +119,7 @@ IA_Look / IA_MouseLook
 |------|--------------|
 | 캡슐 | 빠르게 상승 |
 | 점프 애니 | pelvis·spine 추가 상승 |
-| 컴포넌트 −20 | 지상 기준선 — 공중에서 상대적으로 메시가 눈 높이 침범 |
+| 컴포넌트 Y −20 | 지상 기준선 — 공중에서 상대적으로 메시가 눈 높이 침범 |
 
 `CtrlRig_FPWarp`는 원래 **아래 보기 spine pullback**용. 점프 전용은 아니나 **같은 본 체인**으로 확장 가능.
 
@@ -145,9 +145,9 @@ SpineWeight = BaseWeight × Lerp(1.0, AirMultiplier, IsInAirAlpha)
 - `spine_03` ~ `head`를 `Ctrl_CameraLock` 쪽으로 더 강하게 고정
 - pelvis는 애니 일부 유지 → 다리 움직임 자연스러움
 
-#### 4순위: BodyOffset Z 추가 (리그)
+#### 4순위: BodyOffset Y 추가 (리그)
 
-- 공중에서만 `BodyOffset.Z` 추가 하향 — `FInterp`로 부드럽게
+- 공중에서만 `BodyOffset.Y`(컴포넌트와 **동축**) 추가 — `FInterp`로 부드럽게
 
 #### 5순위: 점프 시작 spine 스냅샷
 
@@ -168,14 +168,14 @@ SpineWeight = BaseWeight × Lerp(1.0, AirMultiplier, IsInAirAlpha)
 |------|------|
 | Root Motion | 점프 RM이 pelvis 밀면 리그만으로 부족 |
 | Spine additive | 키프레임 크면 Weight 더 올려야 함 |
-| Mesh 부모 관계 | 카메라 자식 + 리그 Z **이중 적용** |
+| Mesh 부모 관계 | 카메라 자식 + 리그·컴포넌트 **Y** **이중 적용** |
 | 네트워크 (향후) | 1P 리그 과보정은 **로컬 오너** 위주 |
 
 ### 구현 상태 (문서 작성 시점)
 
 | 항목 | 상태 |
 |------|------|
-| 몸 −20 / 카메라 +20 | ✅ 사용자 적용 (미커밋) |
+| 몸 Y −20 / 카메라 Y +20 | ✅ 사용자 적용 (미커밋) |
 | ABP ↔ 리그 IsFalling 연동 | ⏳ 설계만 |
 | 점프 PIE 검증 | ⏳ |
 | CtrlRig_FPWarp 튜닝 | 🔄 워킹 트리 수정 있음 |
