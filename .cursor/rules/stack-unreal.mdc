@@ -24,7 +24,7 @@ alwaysApply: false
 - FP AnimBP: `ABP_FP_Copy` → `CtrlRig_FPWarp`.
 - 리그는 **포즈 후처리**(spine pullback, IK). 점프 안정화: AnimBP에서 이동 상태를 리그 **Weight/IK 스위치**로 넘김.
 - 1P 몸 위치: 컴포넌트 Y 오프셋(`project-domain`) ↔ `BodyOffset` **택일**; 카메라 Transform은 BP.
-- `.uasset` 바이너리: grep 한계; MCP·에디터로 그래프·Details 확인.
+- `.uasset` 바이너리: grep 한계; **에디터 실행 후** MCP(`manage_blueprint`, `inspect`) 또는 Details. 설정·트러블슈팅: `Docs/06-mcp-cursor-setup.md`.
 
 ## 게임 스레드 (RULE-02)
 

@@ -24,7 +24,7 @@
 | 렌더링 | Lumen GI·반사, Virtual Shadow Maps, Ray Tracing (프로젝트 DefaultEngine 설정) |
 | 캐릭터 | UE5 Mannequin (`SKM_Manny_Simple` 등) |
 | 1P 애니 | `ABP_FP_Copy` + **Control Rig** `CtrlRig_FPWarp` |
-| 에디터 자동화 | **UnrealMCP** 플러그인 (블루프린트 조사·Cursor 연동) |
+| 에디터 자동화 | **McpAutomationBridge** + Cursor MCP ([06-mcp-cursor-setup.md](./06-mcp-cursor-setup.md)) |
 | 버전 관리 | Git (`main` 브랜치) |
 
 ## C++ 모듈

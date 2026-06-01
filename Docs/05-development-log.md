@@ -32,7 +32,7 @@
 | 아래 보기 클리핑 | 대안 비교 (피치 분리, 리그, 가시성) |
 | 몸 Y −20 / 카메라 Y +20 | 사용자 튜닝 적용 |
 | 점프 겹침 | `CtrlRig_FPWarp` 공중 stabilize 설계 |
-| UnrealMCP | BP 조사 워크플로 확립 |
+| McpAutomationBridge / MCP | BP 조사 워크플로 확립 |
 
 **에이전트 코드/BP 직접 수정:** 없음 (탐구·설계 중심)  
 **사용자 에디터 수정 (미커밋):**
@@ -57,6 +57,13 @@
 - 오프셋 축 **Z → Y** (`FirstPersonMesh` Y −20, `FirstPersonCamera` Y +20)
 - 리그 vs 컴포넌트: 몸 `BodyOffset.Y` 대체 가능, 카메라 BP 유지
 - `Docs/03`, `04`, `05` 동기화
+
+### 2026-06-01 — README·MCP 문서
+
+- 루트 [README.md](../README.md) — 온보딩·MCP 빠른 링크
+- [06-mcp-cursor-setup.md](./06-mcp-cursor-setup.md) — Cursor · Native / Node 브리지
+- `mcp.cursor.example.json`, `mcp.cursor.node-bridge.example.json` — 설정 템플릿
+- `Docs/01`, `02`, `04` — McpAutomationBridge 명칭 정리
 
 ---
 
@@ -119,7 +126,7 @@
 
 **긴 버전**
 
-> Unreal Engine 5.7으로 네트워크 FPS를 목표하는 프로젝트를 구성하고 Epic First/Third Person 템플릿과 Mannequin 파이프라인을 이식했습니다. First Person Rendering 환경에서 “몸이 보이는 이유”, CameraManager ViewPitch 제한, 아래 시선 클리pping을 체계적으로 조사했으며, FirstPersonMesh/Camera **Y** 오프셋(−20/+20) 튜닝으로 지상 클리핑을 개선했습니다. 점프 시 메시·카메라 겹침에 대해서는 CtrlRig_FPWarp의 spine pullback·FABRIK를 활용한 공중 stabilize 방안을 AnimBP 연동까지 설계했습니다. UnrealMCP를 활용해 Blueprint 바이너리 자산을 에디터 연동으로 분석하는 워크플로를 정립했습니다.
+> Unreal Engine 5.7으로 네트워크 FPS를 목표하는 프로젝트를 구성하고 Epic First/Third Person 템플릿과 Mannequin 파이프라인을 이식했습니다. First Person Rendering 환경에서 “몸이 보이는 이유”, CameraManager ViewPitch 제한, 아래 시선 클리pping을 체계적으로 조사했으며, FirstPersonMesh/Camera **Y** 오프셋(−20/+20) 튜닝으로 지상 클리핑을 개선했습니다. 점프 시 메시·카메라 겹침에 대해서는 CtrlRig_FPWarp의 spine pullback·FABRIK를 활용한 공중 stabilize 방안을 AnimBP 연동까지 설계했습니다. MCP(McpAutomationBridge)를 활용해 Blueprint 바이너리 자산을 에디터 연동으로 분석하는 워크플로를 정립했습니다.
 
 ---
 

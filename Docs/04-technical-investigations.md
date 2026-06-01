@@ -182,7 +182,7 @@ SpineWeight = BaseWeight × Lerp(1.0, AirMultiplier, IsInAirAlpha)
 
 ---
 
-## 조사 5: 개발 환경 — UnrealMCP
+## 조사 5: 개발 환경 — MCP (McpAutomationBridge)
 
 ### 배경
 
@@ -190,9 +190,11 @@ SpineWeight = BaseWeight × Lerp(1.0, AirMultiplier, IsInAirAlpha)
 
 ### 사용
 
-- `UE5NetworkFps.uproject`에 **UnrealMCP** 플러그인 Enabled
-- Cursor MCP: `read_blueprint_content`, `analyze_blueprint_graph`, `get_blueprint_function_details`
-- 에디터 실행 + MCP 서버 (`unreal_mcp_server_advanced.py`) 연동
+- `Plugins/McpAutomationBridge` — 에디터 WebSocket·Native HTTP MCP
+- Cursor: [06-mcp-cursor-setup.md](./06-mcp-cursor-setup.md), 예시 `mcp.cursor.example.json` / `mcp.cursor.node-bridge.example.json`
+- **Native MCP:** `http://localhost:3000/mcp` (`Config/DefaultGame.ini` — `bEnableNativeMCP=True`)
+- **Node 브리지:** [Unreal_mcp](https://github.com/ChiR24/Unreal_mcp) `cli.js` + `UE_PROJECT_PATH` + 포트 `8091`
+- 에디터 실행 후 Blueprint·에셋 조사 도구 호출
 
 ### 효과
 

@@ -2,6 +2,8 @@
 
 네트워크 FPS 프로젝트 **UE5NetworkFps**의 작업 기록·기술 정리입니다. 포트폴리오·온보딩·후속 개발 참고용으로 작성했습니다.
 
+**저장소 루트:** [README.md](../README.md) — 실행 요약·Cursor MCP 빠른 링크
+
 ## 문서 목록
 
 | 문서 | 내용 |
@@ -11,6 +13,7 @@
 | [03-first-person-character.md](./03-first-person-character.md) | 1인칭 캐릭터 시스템 (핵심 작업) |
 | [04-technical-investigations.md](./04-technical-investigations.md) | 조사·설계 이슈 (카메라, 클리핑, Control Rig) |
 | [05-development-log.md](./05-development-log.md) | 커밋·작업 타임라인·다음 단계 |
+| [06-mcp-cursor-setup.md](./06-mcp-cursor-setup.md) | Cursor MCP · McpAutomationBridge 연동 |
 
 ## 빠른 요약 (포트폴리오용)
 

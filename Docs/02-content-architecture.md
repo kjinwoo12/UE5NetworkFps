@@ -4,7 +4,7 @@
 
 ```
 UE5NetworkFps/
-├── UE5NetworkFps.uproject      # 엔진 5.7, UnrealMCP 플러그인
+├── UE5NetworkFps.uproject      # 엔진 5.7, Plugins/McpAutomationBridge
 ├── Config/                     # DefaultEngine, Input, Game, Editor
 ├── Content/
 │   ├── FirstPerson/            # 1P 템플릿 (캐릭터·레벨·Anim·CtrlRig)
@@ -100,7 +100,7 @@ Enhanced Input 기반:
 `.uasset` / `.umap`은 텍스트 diff가 어렵습니다. 이 프로젝트에서는:
 
 1. **Unreal Editor** — Components, Class Defaults, AnimGraph
-2. **UnrealMCP** — `read_blueprint_content`, `analyze_blueprint_graph`
+2. **MCP (Cursor + McpAutomationBridge)** — Blueprint·에셋 조사 ([06-mcp-cursor-setup.md](./06-mcp-cursor-setup.md))
 3. **에셋 바이너리 문자열 추출** — 프로퍼티 이름·주석 힌트 (보조)
 
 포트폴리오·문서 작성 시 **에디터 스크린샷 + MCP 조사 결과**를 함께 두면 재현성이 높아집니다.
