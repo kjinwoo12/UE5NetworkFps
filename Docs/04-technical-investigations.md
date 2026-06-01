@@ -189,6 +189,7 @@ SpineWeight = BaseWeight × Lerp(1.0, AirMultiplier, IsInAirAlpha)
 
 ### 사용
 
+- 에디터 실행 후 Blueprint·에셋 조사 도구 호출
 
 ### 효과
 
