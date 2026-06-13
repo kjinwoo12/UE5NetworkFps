@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "UE: Generate VS Code Project Files",
+      "type": "shell",
+      "command": "\"C:/Program Files/Epic Games/UE_5.7/Engine/Build/BatchFiles/Build.bat\"",
+      "args": [
+        "-projectfiles",
+        "-project=${workspaceFolder}/UE5NetworkFps.uproject",
+        "-game",
+        "-engine",
+        "-vscode"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "UE: Refresh .clangd",
+      "type": "shell",
+      "command": "python",
+      "args": ["${workspaceFolder}/Scripts/generate_clangd.py"],
+      "dependsOn": ["UE: Generate VS Code Project Files"],
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
