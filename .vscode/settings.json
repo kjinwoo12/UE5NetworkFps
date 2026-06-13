@@ -1,0 +1,27 @@
+{
+  "clangd.enable": false,
+  "C_Cpp.intelliSenseEngine": "default",
+  "C_Cpp.default.cppStandard": "c++20",
+  "C_Cpp.default.intelliSenseMode": "msvc-x64",
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/.vscode/compileCommands_UE5NetworkFps.json",
+  "C_Cpp.default.configurationProvider": "ms-vscode.cpptools",
+  "C_Cpp.default.enhancedColorization": "enabled",
+  "C_Cpp.errorSquiggles": "enabled",
+  "files.watcherExclude": {
+    "**/Binaries/**": true,
+    "**/DerivedDataCache/**": true,
+    "**/Intermediate/**": true,
+    "**/Saved/**": true,
+    "**/.vscode/compileCommands_Default/**": true
+  },
+  "search.exclude": {
+    "**/Binaries": true,
+    "**/DerivedDataCache": true,
+    "**/Intermediate": true,
+    "**/Saved": true,
+    "**/.vscode/compileCommands_Default": true
+  },
+  "C_Cpp.files.exclude": {
+    "**/.vscode/compileCommands_Default": true
+  }
+}
