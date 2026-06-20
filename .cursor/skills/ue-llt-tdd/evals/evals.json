@@ -1,0 +1,23 @@
+{
+  "skill_name": "ue-llt-tdd",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/tdd-plan LyraGame의 FpsReplicationGraph 노드 분류 로직 — 플레이어 폰은 AlwaysRelevant, 정적 액터는 Spatialized",
+      "expected_output": ".result/tdd-plan.md with TC table, no .cpp files created",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "/tdd-accept",
+      "expected_output": "LyraGameTests module scaffold, Catch2 tests, production code, Accept 결과 in tdd-plan.md",
+      "files": [".result/tdd-plan.md"]
+    },
+    {
+      "id": 3,
+      "prompt": "/tdd HealthComponent에 대미지 클램프(min 0) 추가",
+      "expected_output": "tdd-plan.md written then tests+impl in same session",
+      "files": []
+    }
+  ]
+}
