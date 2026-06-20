@@ -33,7 +33,8 @@ alwaysApply: true
 | 콘텐츠 | `Content/` (`FirstPerson`, `ThirdPerson`, `NetworkFps`, `Characters`, `Weapons`, `Input`) |
 | 설정 | `Config/` (`DefaultEngine.ini`, `DefaultInput.ini`, …) |
 | C++ | `Source/UE5NetworkFps/` |
-| 사람용 문서 | `Docs/` (에이전트 지침 아님 — 상세·타임라인) |
+| 사람용 README | `README.md` — 온보딩·레이아웃 요약 (에이전트 지침 아님) |
+| 사람용 문서 | `Docs/` — 상세·타임라인 (`README.md` → `Docs/README.md`) |
 | MCP 플러그인 | `Plugins/McpAutomationBridge/` |
 | 에이전트 지침 | `.cursor/rules/`, `.cursor/skills/` |
 
@@ -50,7 +51,7 @@ alwaysApply: true
 ## 환경·실행
 
 - 로컬: UE 5.7 에디터로 `.uproject` 열기
-- **MCP:** `McpAutomationBridge` 활성 + 에디터 실행 후 Cursor MCP. 기본은 **Node 브리지** (`Unreal_mcp`의 `dist/cli.js` → WebSocket **8091**). `~/.cursor/mcp.json`·경로·env는 **`Docs/06-mcp-cursor-setup.md`** (머신별 경로는 rule에 고정하지 않음). Native HTTP(`localhost:3000/mcp`)는 선택(`bEnableNativeMCP`는 `Config/DefaultGame.ini`).
+- **MCP:** `McpAutomationBridge` 활성 + 에디터 실행 후 Cursor MCP. 기본은 **Node 브리지** (`Unreal_mcp`의 `dist/cli.js` → WebSocket **8091**, **Node.js 18+**). Native MCP만 쓸 경우 Node 불필요. `~/.cursor/mcp.json`·경로·env는 **`Docs/06-mcp-cursor-setup.md`** (머신별 경로는 rule에 고정하지 않음). Native HTTP(`localhost:3000/mcp`)는 선택(`bEnableNativeMCP`는 `Config/DefaultGame.ini`).
 - RULE-02: **해당** — 게임 스레드에서 blocking I/O·과도 CPU 금지 (`stack-unreal.mdc` 참고)
 - RULE-03: N/A | RULE-04: N/A (단일 repo)
 

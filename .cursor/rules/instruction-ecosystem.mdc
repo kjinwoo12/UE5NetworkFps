@@ -7,6 +7,13 @@ alwaysApply: true
 
 **에이전트 지침은 `.cursor/`의 `.mdc` + `skills/*/SKILL.md`만 사용한다.**
 
+## `.cursor-plugin/` (Marketplace 플러그인)
+
+- **역할:** rules·skills·agents·MCP 등을 **배포용 번들**로 패키징 (`plugin.json` manifest).
+- **자동 로드 아님:** 게임 repo 루트에 manifest만 두어도 워크스페이스 에이전트에 합쳐지지 않음.
+- **활성화:** Marketplace(`/add-plugin`)·팀 Marketplace·`~/.cursor/plugins/local/<이름>/` 설치 후 Reload.
+- **혼동 금지:** 프로젝트 에이전트 지침 = `.cursor/rules/`·`.cursor/skills/` — `.cursor-plugin/`과 별개.
+
 ## caveman 응답 (강제·매 턴)
 
 **모든 사용자 대면 설명·요약·진행 보고**는 caveman **full** 적용. 사용자 언어 규칙(예: 한국어) 있으면 **그 언어 + caveman**(군더더기·완곡어·인사말 제거, 짧은 문장·조각 OK). 기술 용어·코드·에러 문자열은 정확히.
