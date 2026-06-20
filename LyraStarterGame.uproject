@@ -308,6 +308,14 @@
 			"Enabled": true
 		},
 		{
+			"Name": "FpsCore",
+			"Enabled": true
+		},
+		{
+			"Name": "FpsMaps",
+			"Enabled": true
+		},
+		{
 			"Name": "GameplayInteractions",
 			"Enabled": true
 		},
