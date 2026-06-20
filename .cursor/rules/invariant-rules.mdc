@@ -72,7 +72,7 @@ true
 
 금지: `.cursor/rules/*.mdc`, `.cursor/skills/*` 무단 편집; `.cursor/` 아래 에이전트용 `.md` 신규.
 
-허용: `@self-update` diff → **승인** 후 반영; 사용자 「커서 지침 업데이트」.
+허용: `@self-update` diff → **승인** 후 반영(또는 repo **자동승인** — `skills/self-update/SKILL.md`); 사용자 「커서 지침 업데이트」.
 
 ---
 
