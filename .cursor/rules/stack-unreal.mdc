@@ -13,11 +13,59 @@ alwaysApply: false
 3. C++ — `Source/LyraGame/` 또는 Game Feature Runtime 모듈 (API·성능 필요 시)
 4. `ShooterTests`·Gauntlet + PIE·멀티 PIE 검증
 
+## 라이브 코딩 (Live Coding)
+
+Epic [라이브 코딩 문서](https://dev.epicgames.com/documentation/unreal-engine/using-live-coding-to-recompile-unreal-engine-applications-at-runtime?lang=ko). 에디터·PIE 실행 중 **Ctrl+Alt+F11**로 C++ 패치.
+
+### 기본 원칙
+
+**애매하면 라이브 코딩 쓰지 않는다.** IDE 또는 UBT 전체 빌드(에디터 종료, 필요 시 `-NoLiveCoding`).
+
+### 사용 OK (안정)
+
+- 기존 **함수 내부** 로직·수식·이벤트 처리만 변경
+- `.cpp` 구현부의 자잘한 수정 — 빠른 반복에 적합
+
+### 사용 지양 (불안정)
+
+- **헤더·클래스 구조** 변경 — 멤버·UPROPERTY 추가/삭제, 가상 함수·UCLASS/USTRUCT/UENUM 시그니처
+- **신규 C++ 클래스**·모듈·UHT 반영 — Live Coding 활성 시 UBT 거부
+- **리인스턴싱**이 필요한 대규모 리팩터 — 크래시·dangling 포인터 위험
+- **데이터 유실:** 패치가 디스크 BP·에셋에 영구 반영되지 않을 수 있음 — 에디터 재시작 전 Details 값·신규 클래스 검증 주의
+
+### 구조 변경 시 워크플로
+
+1. 에디터 종료
+2. Visual Studio / Rider 또는 `UnrealBuildTool` **전체 빌드** (`-NoLiveCoding` 권장)
+3. 에디터 재시작 후 PIE 검증
+
+GF Runtime **신규 UCLASS**(`FpsCoreRuntime` 등)는 항상 위 경로.
+
+### LC 잔재 — CDO 충돌 (에디터 재시작 Fatal)
+
+증상: `Cannot replace existing object of a different class` — `CommonUser.CommonSession_HostSessionRequest` CDO 등. 원인: Live Coding이 `Plugins/*/Binaries/Win64/`에 `UnrealEditor-*.dll-0001` 등 **동일 모듈 다중 DLL** 남김.
+
+복구:
+
+1. `UnrealEditor`·`UnrealEditor-Cmd` 전부 종료
+2. 프로젝트 + Game Feature **`Binaries/`·`Intermediate/`** 삭제
+3. `LyraEditor Win64 Development -Project=… -NoLiveCoding` 재빌드
+4. 모듈당 DLL **1개** 확인; `Saved/Config/.../EditorPerProjectUserSettings.ini`에서 `LiveCodingSettings bEnabled=False` 유지
+
+## BP reparent (CameraMode 등)
+
+- `unreal.BlueprintEditorLibrary.reparent_blueprint(bp, new_parent_class)` — parent UCLASS는 **모듈 로드 후**(`load_class` None이면 전체 빌드·에디터 재시작).
+- MCP: `execute_python` **인라인 `code`** 권장 — 프로젝트 `.py` **file** 경로는 bridge `SECURITY_VIOLATION`.
+- `UnrealEditor-Cmd -run=pythonscript`는 GUI 에디터 **닫은 뒤** (저장 Error 32).
+
 ## 카메라 (Lyra)
 
-- 입력 → `ULyraHeroComponent` → **`DetermineCameraMode()`** → `ULyraCameraModeStack`.
-- Pitch·FOV·오프셋은 **`ULyraCameraMode`** 서브클래스(Blueprintable)에서 처리 — FP 템플릿 CameraManager 아님.
-- 1P 목표 시 Shooter Experience·카메라 모드 BP(또는 C++ 서브클래스)부터 확인.
+- 입력 → `ULyraHeroComponent` → **`DetermineCameraMode()`** → `ULyraCameraModeStack` → `ULyraCameraComponent::GetCameraView`.
+- **`ALyraPlayerCameraManager`는 1P용으로 교체·서브클래스 불필요** — UI 카메라 우선·디버그·기본 FOV 한도만.
+- Pitch·FOV·위치는 **`ULyraCameraMode`** 서브클래스(Blueprintable) — ThirdPerson은 어깨 오프셋·관통; 1P는 피벗(눈) + ControlRotation.
+- **이 프로젝트 1P:** `FpsCoreRuntime` `ULyraCameraMode_FirstPerson` + CM BP(`/FpsCore/Camera/CM_FirstPerson`, `/Game/Characters/Cameras/CM_FirstPerson`) → `HeroData_FpsGame.DefaultCameraMode`(현재 Game 경로 CM).
+- GF Runtime **신규 UCLASS** → `stack-unreal.mdc` **라이브 코딩** — 구조 변경은 전체 빌드.
+- PIE 검증: Fps Playlist/Experience; Ability ADS 등은 `LyraGameplayAbility::SetCameraMode`로 별도 CM BP.
 
 ## 애니·GAS
 
