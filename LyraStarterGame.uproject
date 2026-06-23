@@ -136,6 +136,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "McpAutomationBridge",
+			"Enabled": true
+		},
+		{
 			"Name": "MagicLeap",
 			"Enabled": false
 		},

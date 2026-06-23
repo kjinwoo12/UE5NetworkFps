@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "unreal-native": {
+      "url": "http://localhost:3000/mcp"
+    },
+    "unreal-bridge": {
+      "command": "node",
+      "args": [
+        "F:/git/Unreal_mcp/dist/cli.js"
+      ],
+      "env": {
+        "UE_PROJECT_PATH": "F:/git/UE5NetworkFps/LyraStarterGame.uproject",
+        "MCP_AUTOMATION_PORT": "8091"
+      }
+    }
+  }
+}
