@@ -1,0 +1,23 @@
+{
+  "skill_name": "context-health",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "요즘 커서 에이전트가 점점 느려지는 것 같아. 지침이나 스킬 때문인지 점검해줘.",
+      "expected_output": "audit_context.py 실행, alwaysApply·스킬 메타데이터 비용 요약, P0/P1 권장 조치, @self-update 경로 안내",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "/context-health — new chat은 빠른데 같은 프로젝트에서 긴 세션만 느림",
+      "expected_output": "static audit + 세션/히스토리/도구 출력 원인 구분, cavecrew·새 채팅 등 P2 완화책",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "alwaysApply rule 너무 많은지 보고 project-domain 줄일 수 있으면 방법만 제안해 (직접 수정 말고)",
+      "expected_output": "audit 수치, globs 전환 제안, RULE-05로 self-update 경로만 — 무단 rules 편집 없음",
+      "files": []
+    }
+  ]
+}

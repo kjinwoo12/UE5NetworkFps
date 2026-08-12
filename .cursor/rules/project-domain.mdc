@@ -55,6 +55,7 @@ alwaysApply: true
 
 - 로컬: UE 5.7 에디터로 `LyraStarterGame.uproject` 열기
 - **MCP:** `McpAutomationBridge` 에디터 활성 + 실행 후 Cursor MCP. Node 브리지(WebSocket **8091**, Node 18+) 또는 Native MCP. 설정·env는 **`Plugins/McpAutomationBridge/README.md`** (머신별 경로 rule에 고정 금지).
+- **Cursor 동시 연결:** Native(`url`) + Bridge(`command`)를 같이 쓰면 `.cursor/mcp.json`에서 **서버 키를 분리** (`unreal-native`, `unreal-bridge` 등). 같은 키(`unreal-engine`)에 방식 2개를 합치지 않는다.
 - RULE-02: **해당** — 게임 스레드에서 blocking I/O·과도 CPU 금지 (`stack-unreal.mdc` 참고)
 - RULE-03: N/A | RULE-04: N/A (단일 repo)
 
@@ -70,6 +71,7 @@ alwaysApply: true
 - `project-domain`이 **구 FP 템플릿** 기준으로 남음 → `FirstPerson`·`CtrlRig_FPWarp` 등 **없는 경로** 탐색
 - Lyra를 3P 샘플만으로 오인 → Shooter Game Feature·Experience가 실제 게임플레이 진입점
 - Game Feature·Experience 없이 캐릭터/무기 BP만 수정 → PIE에서 Experience 미로드로 검증 실패
+- 이름 비슷한 맵/에셋(`L_FiringRange_WP` vs `L_FpsFiringRange_WP`)에서 **리디렉터를 실에셋으로 오인** → 원인 분석 전 **Fix Up Redirectors / Update Referencers 우선** 수행 후 경로 재확인
 - **라이브 코딩 남용** — 헤더·신규 UCLASS·UPROPERTY 변경은 불안정; 애매하면 IDE/UBT `-NoLiveCoding` 전체 빌드 (`stack-unreal.mdc` **라이브 코딩**). 재시작 Fatal `Cannot replace existing object of a different class`(`CommonSession_HostSessionRequest` 등) → LC 중복 DLL(`*-0001.dll`) — `Binaries`/`Intermediate` 클린 후 재빌드.
 - 1P용 `PlayerCameraManager` 서브클래스 추가 시도 → Lyra는 **CameraMode** 확장이 정석
 - `UE5NetworkFps.uproject`·`Source/UE5NetworkFps/` 참조 → **존재하지 않음**

@@ -506,3 +506,6 @@ FodyWeavers.xsd
 
 # for cursor rule template
 .cursor/rules/agent-local.mdc
+
+# Cursor optimizer / review reports (optional track)
+.result/

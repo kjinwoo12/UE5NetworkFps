@@ -1,0 +1,22 @@
+---
+description: git add 시 에디터·빌드·벤더 노이즈 제외
+alwaysApply: true
+---
+
+# Git 스테이징 노이즈 필터
+
+`git add` 시 작업 의도 파일만. 의도 불명 시 확인. `git add .` / `-A` 금지 → `git add -- <paths>`.
+
+## 제외 (명시 요청 없으면)
+
+- `.vs/**`, `.vscode/` 개인 설정, `Binaries/**`, `Intermediate/**`, `DerivedDataCache/**`, `Saved/**`
+- `*.VC.db*`, `*.vsidx`, `*.ipch`, `CopilotIndices/**`, `FileContentIndex/**`
+- Live Coding 부산물 `*-0001.dll` 등 `Binaries` 잔여
+- 에디터 전용만 바뀐 `Config/DefaultEditor*.ini` — 런타임 의도 없으면 제외·분리 커밋
+- 서드파티·엔진 플러그인 대량 binary (의도한 GF/콘텐츠 변경만)
+
+## UE / Lyra
+
+- `.uasset`/`.umap` 변경은 의도한 Experience·히어로·맵만. 리디렉터·이름 비슷한 맵 혼동 주의
+- C++: `Source/LyraGame/` · `Source/LyraEditor/` · `Plugins/GameFeatures/**/Source/` — 무관한 모듈 diff 제외
+- MCP/로컬: `.cursor/rules/agent-local.mdc`, 머신 절대경로 설정 커밋 금지

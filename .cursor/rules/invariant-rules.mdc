@@ -70,9 +70,9 @@ true
 
 **위반 시:** 팀 지침 희석.
 
-금지: `.cursor/rules/*.mdc`, `.cursor/skills/*` 무단 편집; `.cursor/` 아래 에이전트용 `.md` 신규.
+금지: `.cursor/rules/*.mdc`, `.cursor/skills/*` 무단 편집; 에이전트용 장문 `.md` 무단 신규.
 
-허용: `@self-update` diff → **승인** 후 반영(또는 repo **자동승인** — `skills/self-update/SKILL.md`); 사용자 「커서 지침 업데이트」.
+허용: `@self-update` / `/cursor-optimizer`(개선 범위 안) / 사용자 「커서 지침 업데이트」; 예외 파일 `README.md`·`commands/*.md`·`SKILL.md`.
 
 ---
 

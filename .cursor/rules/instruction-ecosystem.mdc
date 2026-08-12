@@ -5,79 +5,70 @@ alwaysApply: true
 
 # Cursor 지침 생태계
 
-**에이전트 지침은 `.cursor/`의 `.mdc` + `skills/*/SKILL.md`만 사용한다.**
+**에이전트 지침 정본:** `.cursor/rules/*.mdc` + `skills/*/SKILL.md`.  
+**진입 인덱스(항상 로드 아님):** [`README.md`](../README.md) · `commands/*.md`.
 
-## `.cursor-plugin/` (Marketplace 플러그인)
+## `.cursor-plugin/` (Marketplace)
 
-- **역할:** rules·skills·agents·MCP 등을 **배포용 번들**로 패키징 (`plugin.json` manifest).
-- **자동 로드 아님:** 게임 repo 루트에 manifest만 두어도 워크스페이스 에이전트에 합쳐지지 않음.
-- **활성화:** Marketplace(`/add-plugin`)·팀 Marketplace·`~/.cursor/plugins/local/<이름>/` 설치 후 Reload.
-- **혼동 금지:** 프로젝트 에이전트 지침 = `.cursor/rules/`·`.cursor/skills/` — `.cursor-plugin/`과 별개.
+배포 번들만. 워크스페이스 자동 로드 아님. 프로젝트 지침 = `.cursor/rules`·`skills` — 플러그인과 별개.
 
 ## caveman 응답 (강제·매 턴)
 
-**모든 사용자 대면 설명·요약·진행 보고**는 caveman **full** 적용. 사용자 언어 규칙(예: 한국어) 있으면 **그 언어 + caveman**(군더더기·완곡어·인사말 제거, 짧은 문장·조각 OK). 기술 용어·코드·에러 문자열은 정확히.
+사용자 대면 설명·요약 = caveman **full**. 사용자 언어(예: 한국어) + caveman.  
+해제: `stop caveman` / `normal mode`. 코드·커밋·PR 본문 = 정상.  
+Auto-Clarity: 보안·되돌릴 수 없는 작업·순서 모호·재질문 → 잠깐 일반 문장.  
+상세: `caveman-mode.mdc` · `skills/caveman/SKILL.md` (스킬 안 읽어도 이 절 준수).
 
-| 구분 | 규칙 |
-|------|------|
-| 지속 | 매 응답 유지. 해제는 `stop caveman` / `normal mode`만 |
-| 코드·커밋·PR 본문 | 정상 형식 (caveman 아님) |
-| Auto-Clarity | 보안 경고, 되돌릴 수 없는 작업 확인, 순서 모호한 다단계, 압축으로 오해 가능, 사용자 재질문 → 잠깐 일반 문장 후 caveman 복귀 |
-| 형제 스킬 | 커밋 `caveman-commit`, 리뷰 `caveman-review`, 위임 `cavecrew` |
-
-상세·강도: `rules/caveman-mode.mdc`, `skills/caveman/SKILL.md`. 작업 시작 시 `skills/caveman/SKILL.md`를 **읽지 않아도** 이 절을 따른다.
-
-## 레이어 구성
+## 레이어
 
 | 레이어 | 경로 | 역할 |
 |--------|------|------|
-| 공통 | `rules/instruction-ecosystem.mdc` | 진입·판단 트리 |
-| 공통 | `rules/invariant-rules.mdc` | 불변 제약 |
-| 공통 | `rules/project-domain.mdc` | 이 repo 도메인·레이아웃 |
-| 공통 | `rules/stack-conventions.mdc` | 레이어·계약 (언어 무관) |
-| 공통 | `rules/solid-principles.mdc` | SOLID (globs 조정) |
-| 선택 | `rules/stack-*.mdc` | 언어·프레임워크 (`overlays/stacks/`에서 복사) |
-| 선택 | `rules/env-*.mdc` | 모노레포·게임 등 (`overlays/environments/`) |
-| 공통 | `rules/communication-style.mdc` | 서브에이전트 위임 |
-| 공통 | `rules/caveman-mode.mdc` | caveman 압축 응답 (항상) |
-| 세션 | `rules/agent-local.mdc` | gitignore |
-| 공정 | `skills/*/SKILL.md` | `@task-start` 등 |
+| 불변 | `invariant-rules.mdc` | RULE-01~06 |
+| 도메인 | `project-domain.mdc` | Lyra·GF·1P |
+| 메타 | `instruction-ecosystem.mdc` | 이 파일 |
+| 문체 | `caveman-mode.mdc` | 압축 응답 |
+| 스테이징 | `git-staging-noise.mdc` | git add 필터 |
+| 스택 | `stack-*.mdc`, `solid-principles.mdc` | globs |
+| 행동 | `karpathy-guidelines.mdc` | 코딩 행동 (globs) |
+| 위임 | `communication-style.mdc` | 서브에이전트 |
+| 공정 | `skills/*`, `commands/*` | `/task-start` 등 |
 
-**형식:** 팀 지침은 `.mdc`. `.cursor/`에 `AGENTS.md`·`RULES.md` 등 **에이전트용 `.md` 신규 금지** (스킬 `SKILL.md`만 예외).
+**금지:** `AGENTS.md`·`RULES.md` 등 에이전트용 장문 `.md` 신규. **허용:** `README.md`, `commands/*.md`, `SKILL.md`.
 
 ## 판단 트리
 
 ```
 시스템이 실제로 망가지는가?     → invariant-rules.mdc
 세션마다 바뀌는가?             → agent-local.mdc
-작업 타입 전용 공정?           → skills/{name}/SKILL.md
+작업 타입 전용 공정?           → skills/{name}/SKILL.md · commands/
 이 repo·도메인?              → project-domain.mdc
 언어·프레임워크·경로 패턴?   → stack-*.mdc, solid-principles (globs)
-저장소·클라이언트 경계?       → env-*.mdc
-사용자 대면 응답 문체?       → caveman-mode.mdc → skills/caveman/SKILL.md
+사용자 대면 응답 문체?       → caveman-mode.mdc
+지침 토큰·채점?              → cursor-optimizer / context-health
 ```
 
 ## 작업 루프
 
-`@task-start` → 구현 → `@task-done` → (필요 시) `@self-update`
+`/task-start` → 구현 → `/task-done` → (필요 시) `/self-update`  
+지침 추가·분리: `/add-guideline` · 최적화: `/cursor-optimizer` · 감사: `/context-health`
 
 | 호출 | 스킬 |
 |------|------|
 | `@task-start` | `skills/task-start/SKILL.md` |
 | `@task-done` | `skills/task-done/SKILL.md` |
-| `@solid-review` | `skills/solid-review/SKILL.md` |
 | `@self-update` | `skills/self-update/SKILL.md` |
+| `@solid-review` | `skills/solid-review/SKILL.md` |
 
-**지침 일괄 갱신:** 「커서 지침 업데이트」 → `rules/*.mdc` 코드 동기화 (RULE-05 예외).
+**지침 일괄 갱신:** 「커서 지침 업데이트」 → RULE-05 예외.
 
 ## 읽기 우선순위
 
 1. `invariant-rules.mdc`
-2. `project-domain.mdc` + `{{CONTRACT_SURFACE}}` (코드로 구현 상태 확인)
+2. `project-domain.mdc` (코드로 구현 상태 확인)
 3. `agent-local.mdc` (있으면)
-4. `caveman-mode.mdc` + `skills/caveman/SKILL.md` (사용자 대면 응답)
-5. `stack-*.mdc`, `env-*.mdc`, `solid-principles.mdc` (작업 경로 globs)
+4. `caveman-mode.mdc` (문체)
+5. `stack-*.mdc` 등 작업 경로 globs
 
 ## 사람용 문서
 
-`README.md`, `docs/`는 사람용. 에이전트 장기 지침은 `.cursor/rules/*.mdc` 우선.
+repo `README.md`·`Docs/` = 사람용. 에이전트 장기 지침 = `.cursor/rules/*.mdc` 우선.

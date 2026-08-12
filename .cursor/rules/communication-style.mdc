@@ -3,7 +3,8 @@ name: subagent-delegation
 description: >
   서브에이전트 위임 가이드 — 조사·소규모 편집·리뷰 시 메인 컨텍스트 절약.
   압축 출력 프리셋(cavecrew 등) 또는 vanilla Explore/Code Reviewer 선택.
-alwaysApply: true
+  Task·Explore·cavecrew 위임 직전에 적용.
+alwaysApply: false
 ---
 
 # 서브에이전트 위임

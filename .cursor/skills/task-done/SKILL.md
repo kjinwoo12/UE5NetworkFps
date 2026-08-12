@@ -1,33 +1,37 @@
 ---
 name: task-done
 description: >-
-  Closure — diff, RULE self-check, 테스트, optional self-update. task-done.
+  Closure — diff, RULE self-check, 린트/테스트, optional self-update. task-done / 작업 끝.
 disable-model-invocation: true
 ---
 
 # Skill: task-done
 
-완료 표시 전 실행.
+완료 표시 전 실행. 미선언 변경·RULE 위반 있으면 완료 금지.
+
+**적용 생략:** 질문만·리뷰만·변경 없는 답.
 
 ## STEP 1 — Change summary
 
-의도 vs `git diff`; 의도 밖 변경 나열.
+의도 vs `git diff`; 의도 밖 변경 나열. 착수 STEP 3 범위와 차이.
 
 ## STEP 2 — Self-check (`invariant-rules.mdc`)
 
-프로젝트에 해당하는 항목만 체크:
+해당분만:
 
 - [ ] RULE-01 secrets
-- [ ] RULE-02 blocking on async/UI/game main path
-- [ ] RULE-03 migration if persistence schema changed
-- [ ] RULE-04 code only in canonical repo / no forbidden copy path
-- [ ] RULE-06 contract register + DTO/types + tests if **public** contract changed
-- [ ] 테스트 스위트 없음 — 지침·문서 동작 변경 시 `result/README.md`와 `.cursor/` 일관성 확인
-- [ ] 어댑터·서비스·DTO 터치 시 `solid-principles.mdc`; 필요 시 `@solid-review`
+- [ ] RULE-02 blocking on game main / async path
+- [ ] RULE-03 N/A unless persistence added
+- [ ] RULE-04 N/A
+- [ ] RULE-05 `.cursor` 무단 편집 없음 (또는 승인된 self-update/지침 업데이트)
+- [ ] RULE-06 public contract·지침 등록부 동기화
+- [ ] C++/스크립트 변경 → `ReadLints` (가능 시)
+- [ ] 스테이징 노이즈 없음 (`git-staging-noise.mdc`)
+- [ ] 로직 변경 + LLT 있으면 승인된 테스트 통과 (`ue-llt-tdd`)
 
 ## STEP 3 — Branch / lock
 
-브랜치 기록; 락 해제.
+브랜치 기록; 락 있으면 해제.
 
 ## STEP 4 — Worktree
 
@@ -35,10 +39,17 @@ disable-model-invocation: true
 
 ## STEP 5 — self-update?
 
-재사용 패턴 → `@self-update` (대상 `.mdc`).
+재사용 패턴 → `@self-update`. 신규·P/A 분리 → `/add-guideline`. 토큰 비대 → `/cursor-optimizer`.
 
 ## STEP 6 — Report
 
-짧게: 완료 / blocked / human 필요.
+```markdown
+## 완료
+- …
 
-RULE 위반·미선언 변경 시 완료 처리 금지.
+## 검증
+- …
+
+## 후속 (있으면)
+- …
+```
