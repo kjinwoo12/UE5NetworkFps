@@ -7,7 +7,7 @@
       "command": "\"C:/Program Files/Epic Games/UE_5.7/Engine/Build/BatchFiles/Build.bat\"",
       "args": [
         "-projectfiles",
-        "-project=${workspaceFolder}/UE5NetworkFps.uproject",
+        "-project=${workspaceFolder}/LyraStarterGame.uproject",
         "-game",
         "-engine",
         "-vscode"

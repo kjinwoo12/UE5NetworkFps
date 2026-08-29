@@ -41,6 +41,10 @@ public:
 	UFUNCTION(BlueprintPure)
 	UE_API float GetTimeSinceLastInteractedWith() const;
 
+	// Choose the best layer from EquippedAnimSet or UneuippedAnimSet based on the specified gameplay tags
+	UFUNCTION(BlueprintCallable, BlueprintPure=false, Category=Animation)
+	UE_API TSubclassOf<UAnimInstance> PickBestAnimLayer(bool bEquipped, const FGameplayTagContainer& CosmeticTags) const;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Animation)
 	FLyraAnimLayerSelectionSet EquippedAnimSet;
@@ -56,10 +60,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Instanced, BlueprintReadOnly, Category = "Input Devices")
 	TArray<TObjectPtr<UInputDeviceProperty>> ApplicableDeviceProperties;
 	
-	// Choose the best layer from EquippedAnimSet or UneuippedAnimSet based on the specified gameplay tags
-	UFUNCTION(BlueprintCallable, BlueprintPure=false, Category=Animation)
-	UE_API TSubclassOf<UAnimInstance> PickBestAnimLayer(bool bEquipped, const FGameplayTagContainer& CosmeticTags) const;
-
 	/** Returns the owning Pawn's Platform User ID */
 	UFUNCTION(BlueprintCallable)
 	UE_API const FPlatformUserId GetOwningUserId() const;

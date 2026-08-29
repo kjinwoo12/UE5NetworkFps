@@ -5,11 +5,13 @@
 #include "Components/ChildActorComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Cosmetics/LyraPawnComponent_CharacterParts.h"
+#include "Equipment/LyraEquipmentManagerComponent.h"
 #include "GameFramework/Character.h"
 #include "GameplayTagAssetInterface.h"
 #include "GameplayTagContainer.h"
 #include "TimerManager.h"
 #include "UObject/SoftObjectPath.h"
+#include "Weapons/LyraWeaponInstance.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FpsAnimLayerComponent)
 
@@ -214,6 +216,11 @@ void UFpsAnimLayerComponent::ScheduleLinkDefaultAnimLayers()
 	World->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateUObject(this, &ThisClass::LinkDefaultAnimLayers));
 }
 
+void UFpsAnimLayerComponent::RefreshAnimLayers()
+{
+	ScheduleLinkDefaultAnimLayers();
+}
+
 void UFpsAnimLayerComponent::LinkLayersOnMesh(USkeletalMeshComponent* Mesh, TSubclassOf<UAnimInstance> LayerClass)
 {
 	if (Mesh && LayerClass)
@@ -224,13 +231,26 @@ void UFpsAnimLayerComponent::LinkLayersOnMesh(USkeletalMeshComponent* Mesh, TSub
 
 void UFpsAnimLayerComponent::LinkDefaultAnimLayers()
 {
-	const ACharacter* Character = Cast<ACharacter>(GetOwner());
+	ACharacter* Character = Cast<ACharacter>(GetOwner());
 	if (!Character)
 	{
 		return;
 	}
 
 	const FGameplayTagContainer CosmeticTags = FpsAnimLayerComponent_Private::CollectCosmeticTags(Character);
+
+	// After CharacterParts SetSkeletalMesh(bReinitPose), linked layers are wiped.
+	// If a weapon is equipped, re-apply its layers (do not early-out — that left Fps
+	// loadout heroes with mesh but no rifle hold pose when BP GetTypedPawn failed
+	// or cosmetics finished after OnEquipped).
+	if (ULyraEquipmentManagerComponent* EquipmentManager = Character->FindComponentByClass<ULyraEquipmentManagerComponent>())
+	{
+		if (ULyraWeaponInstance* Weapon = EquipmentManager->GetFirstInstanceOfType<ULyraWeaponInstance>())
+		{
+			LinkLayersOnMesh(Character->GetMesh(), Weapon->PickBestAnimLayer(/*bEquipped=*/true, CosmeticTags));
+			return;
+		}
+	}
 
 	// Only CharacterMesh0 evaluates Base + linked Unarmed layers.
 	// B_Manny MeshComponent = CopyPose, FirstPersonMesh = FirstPersonCopy — both copy this pose.
