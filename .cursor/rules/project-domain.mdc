@@ -19,10 +19,12 @@ alwaysApply: true
 | 에디터 C++ | `Source/LyraEditor/` | 구현 | 에셋 검증·에디터 유틸 |
 | 캐릭터 | `ALyraCharacter`, `ULyraHeroComponent` | 구현 | C++ + `Content/Characters/` BP·에셋 |
 | 카메라 | `ALyraPlayerCameraManager`, `ULyraCameraMode*` | 구현 | HeroComponent → `DetermineCameraMode`; 1P 모드는 GF 쪽 |
-| FpsCore GF | `Plugins/GameFeatures/FpsCore` | 구현 | `FpsCoreRuntime`: `ULyraCameraMode_FirstPerson`; Content: `CM_FirstPerson`, `HeroData_FpsGame`, `BP_Hero_Fps` |
+| FpsCore GF | `Plugins/GameFeatures/FpsCore` | 구현 | `FpsCoreRuntime`: 1P `ULyraCameraMode_FirstPerson`, `UFpsLoadoutComponent`, `UFpsAnimLayer*`; Content: `CM_FirstPerson`, `Heroes/` |
 | FpsMaps GF | `Plugins/GameFeatures/FpsMaps` | 구현 | Firing Range 등 맵·Playlist (`DA_Fps_*`) |
-| Shooter GF | `Plugins/GameFeatures/ShooterCore` 등 | 구현 | ShooterMaps·Tests·Explorer — 무기·능력·레거시 Shooter 파이프라인 |
-| Experience | `Content/System/`, Game Features | 구현 | Lyra Experience·Playlist 로딩 |
+| Shooter GF | `Plugins/GameFeatures/ShooterCore` 등 | 구현 | ShooterMaps·Tests·Explorer — 무기·능력·레거시 Shooter 파이프라인. **EquipmentManager는 ShooterCore가 캐릭터에 부착** |
+| 히어로 로스터 | `/FpsCore/Heroes/` | 진행 | Soldier 있음. 목표: Shared 섀시 + Soldier→Reinhardt→Ana |
+| Experience | `Content/System/`, Game Features | 구현 | Fps `B_FpsGame_Default`: `DefaultPawnData`=Soldier, `GameFeaturesToEnable`에 **FpsCore+ShooterCore**. ActionSet은 아직 SharedInput·Accolades 위주(퀵바 HUD 없음 = 의도 가능) |
+| Fps 무기 오버라이드 | `/Game/FpsWeapons/` | 구현 | `GetTypedPawn`=`LyraCharacter`인 Base/Rifle/WID — Fps 히어로가 `B_Hero_ShooterMannequin` 자식 아님 → Shooter `B_WeaponInstance_Base` 그대로면 BP 런타임 오류 |
 | MCP 브리지 | `Plugins/McpAutomationBridge/` | 구현 | `.uproject` 기본 미등록 → 에디터 활성; `Plugins/McpAutomationBridge/README.md` |
 | 사람용 문서 | `README.md` | 구현 | `Docs/` 비어 있음 — README·Lyra 공식 문서 |
 | 자동 테스트 | `ShooterTests`, `LyraGame/Tests`, Gauntlet | Lyra 기본 | 프로젝트 전용 TDD·LLT는 미정 |
@@ -40,6 +42,30 @@ alwaysApply: true
 | MCP 플러그인 | `Plugins/McpAutomationBridge/` |
 | 에이전트 지침 | `.cursor/rules/`, `.cursor/skills/` |
 
+## 히어로 로스터 (FpsCore · 목표 트리)
+
+오버워치형 하이퍼 FPS. **역할 분리(폰 / PawnData / Cosmetic / 무기 AbilitySet)는 Lyra.**  
+`Heroes/{Id}/` 트리는 Lyra 문자 그대로 아님 — 슈터는 `Game/`+`Weapons/` 납작. 로스터 확장용 변형.
+
+**목표 (`/FpsCore/`):**
+
+```
+Camera/CM_FirstPerson
+Experiences/B_FpsGame_Default
+Heroes/
+  Shared/BP_FpsHero              ← 전 히어로 공통 섀시 (복제 금지)
+  Soldier/|Reinhardt/|Ana/       ← HeroData_*, AbilitySet_*, Cosmetics/, Weapons/, Abilities/
+```
+
+| 넣는 곳 | 내용 |
+|---------|------|
+| `Heroes/Shared/` | `BP_FpsHero`만 |
+| `Heroes/{Id}/` | 그 히어로 `HeroData_*`·AbilitySet·무기·스킬·코스메틱 |
+| `Game/` | 매치/시스템 공통만 (없으면 비움). **히어로 HeroData 여기 두지 않음** |
+| `/Game/Characters/` | Lyra 공유 매니퀸·로코모션·1P CopyPose/Rig **참조만**. 새 히어로 본진 아님 |
+
+**현재(코드):** `/FpsCore/Heroes/BP_FpsHero`(아직 `Shared/` 아님), `Soldier/BP_FpsHero_Soldier`+`HeroData_Soldier`, Experience→Soldier. 로드아웃 컴포넌트 때문에 Soldier 자식 BP 있음 — 스켈·이동만 같으면 추가 히어로는 데이터·코스메틱 우선. 로스터 커지면 `FpsHeroes` GF 분리 가능.
+
 ## 1P·카메라 (작업 시)
 
 - **목표:** README — Lyra Shooter 위 **1P 네트워크 FPS**. 구 FP 템플릿(`FirstPersonMesh`·CtrlRig) 가이드는 **적용 안 됨**.
@@ -51,29 +77,44 @@ alwaysApply: true
 - **검증:** PIE는 **Fps Experience/Playlist** (`/FpsCore/…`, `/FpsMaps/…`)로 진입 — Shooter 기본 히어로만 쓰면 카메라 변경 안 보임.
 - **조사:** `.uasset` grep 한계 → MCP `manage_blueprint`·`inspect`(Python `execute_python`) 또는 에디터 Details. 플러그인 Content 경로(`/FpsCore/`, `/FpsMaps/`)는 MCP `SECURITY_VIOLATION` 시 `MCP_ADDITIONAL_PATH_PREFIXES` 확인.
 
+## Experience·로드아웃·HUD·픽업 (작업 시)
+
+- **히어로 고정 로드아웃 (퀵바 없음):** `UFpsLoadoutComponent`(`EquipmentToGrant` → `ULyraEquipmentDefinition` soft class). Authority에서 ASC ready(`OnAbilitySystemInitialized_RegisterAndCall`) 후 **다음 틱** `EquipmentManager::EquipItem`. QuickBar는 슬롯↔장착 오케스트레이션만 — 메시·사격 능력은 Equip 경로. **EquipmentManager ≠ QuickBar** (ShooterCore가 캐릭터에 추가).
+- **애니 타이밍:** `FpsAnimLayer` unarmed 링크가 라이플 홀드를 덮지 않게 — 로드아웃은 unarmed 이후; 이미 `ULyraWeaponInstance` 장착 중이면 unarmed re-link 스킵.
+- **Fps 라이플 정본:** Soldier Loadout → `/Game/FpsWeapons/WID_Rifle` (Instance=`B_WeaponInstance_Rifle` ← `/Game/FpsWeapons/B_WeaponInstance_Base`, `GetTypedPawn` PawnType=`LyraCharacter`). ShooterCore Base는 여전히 `B_Hero_ShooterMannequin` 가정.
+- **퀵바·슈터 HUD:** Shooter Elimination = SharedInput + **`LAS_ShooterGame_StandardComponents`** + **`LAS_ShooterGame_StandardHUD`** + Accolades. Fps Experience에 Components/HUD 없으면 퀵바 UI 없음 — 고정 로드아웃만이면 정상. `GA_QuickbarSlots`만 있어도 슬롯 UI는 안 생김.
+- **밟기 줍기 vs 인터랙트:** `B_WeaponSpawner` = overlap 자동 지급. `B_GrantInventory_Pad` = 인터랙트(+ **ShooterExplorer** `GA_Interact`).
+
 ## 환경·실행
 
 - 로컬: UE 5.7 에디터로 `LyraStarterGame.uproject` 열기
 - **MCP:** `McpAutomationBridge` 에디터 활성 + 실행 후 Cursor MCP. Node 브리지(WebSocket **8091**, Node 18+) 또는 Native MCP. 설정·env는 **`Plugins/McpAutomationBridge/README.md`** (머신별 경로 rule에 고정 금지).
-- **Cursor 동시 연결:** Native(`url`) + Bridge(`command`)를 같이 쓰면 `.cursor/mcp.json`에서 **서버 키를 분리** (`unreal-native`, `unreal-bridge` 등). 같은 키(`unreal-engine`)에 방식 2개를 합치지 않는다.
+- **MCP 연결 시:** BP·에셋 수정은 에이전트가 MCP/`execute_python`으로 직접 — 사용자에게 Details 수동 편집 요청 금지. `manage_blueprint`는 기본 `/Game`·`/Engine`·`/Script`·`/Temp`·`/Niagara`만 — `/FpsCore/`·`/ShooterCore/`는 `SECURITY_VIOLATION` → `MCP_ADDITIONAL_PATH_PREFIXES` 또는 `/Game` 복제·`execute_python` 우회.
+- **Cursor 동시 연결:** Native(`url`) + Bridge(`command`) 동시 → `.cursor/mcp.json` 서버 키 분리 (`unreal-native`, `unreal-bridge`). 같은 키에 방식 2개 금지.
 - RULE-02: **해당** — 게임 스레드에서 blocking I/O·과도 CPU 금지 (`stack-unreal.mdc` 참고)
 - RULE-03: N/A | RULE-04: N/A (단일 repo)
 
 ## 작업 규칙
 
 1. `.cursor/` 변경: RULE-05 — `@self-update`(자동승인 기본) 또는 「커서 지침 업데이트」
-2. Lyra 코어는 `Source/LyraGame/`·`Content/`; FPS Experience·1P·입력 규칙은 `FpsCore`·`FpsMaps`; Shooter 무기·능력·레거시 맵은 `Shooter*` GF
-3. `Config/DefaultEditor.ini` 등 에디터 전용 변경은 게임 런타임과 무관 — 커밋 시 구분
-4. 의미 있는 마일스톤·조사 완료 시 **`Docs/`** (생성 시) 또는 **`README.md`** 갱신 — `.cursor/`와 중복 최소화
+2. Lyra 코어는 `Source/LyraGame/`·`Content/`; FPS Experience·1P·히어로 키트는 `FpsCore`·`FpsMaps`; Shooter 무기·능력·레거시 맵은 `Shooter*` GF
+3. 새 히어로 = `/FpsCore/Heroes/{Id}/` (위 **히어로 로스터**). `BP_FpsHero` 히어로별 복제·`Content/Characters/Cosmetics/`에 새 본진 금지
+4. `Config/DefaultEditor.ini` 등 에디터 전용 변경은 게임 런타임과 무관 — 커밋 시 구분
+5. 의미 있는 마일스톤·조사 완료 시 **`Docs/`** (생성 시) 또는 **`README.md`** 갱신 — `.cursor/`와 중복 최소화
 
 ## 자주 하는 실수
 
 - `project-domain`이 **구 FP 템플릿** 기준으로 남음 → `FirstPerson`·`CtrlRig_FPWarp` 등 **없는 경로** 탐색
 - Lyra를 3P 샘플만으로 오인 → Shooter Game Feature·Experience가 실제 게임플레이 진입점
 - Game Feature·Experience 없이 캐릭터/무기 BP만 수정 → PIE에서 Experience 미로드로 검증 실패
+- Fps Experience만 켜고 퀵바·슈터 HUD가 없다고 히어로 BP만 의심 → **ActionSet에 StandardComponents·StandardHUD 있는지** 먼저 확인. 고정 로드아웃만이면 퀵바 없이도 OK
+- QuickBar 없다고 EquipmentManager·장착도 없다고 오인 → Manager는 **ShooterCore**; 로드아웃은 **`UFpsLoadoutComponent`**
+- Fps 히어로에 Shooter `B_WeaponInstance_Base` 그대로 → `GetTypedPawn(B_Hero_ShooterMannequin)` None → `IsDeadOrDying` 실패. **`/Game/FpsWeapons/`** Base(`LyraCharacter`) 사용
+- `B_GrantInventory_Pad`를 밟기 줍기로 오인 → overlap 자동 지급은 **`B_WeaponSpawner`**; GrantInventory는 인터랙트(+ Explorer Interact 능력)
 - 이름 비슷한 맵/에셋(`L_FiringRange_WP` vs `L_FpsFiringRange_WP`)에서 **리디렉터를 실에셋으로 오인** → 원인 분석 전 **Fix Up Redirectors / Update Referencers 우선** 수행 후 경로 재확인
-- **라이브 코딩 남용** — 헤더·신규 UCLASS·UPROPERTY 변경은 불안정; 애매하면 IDE/UBT `-NoLiveCoding` 전체 빌드 (`stack-unreal.mdc` **라이브 코딩**). 재시작 Fatal `Cannot replace existing object of a different class`(`CommonSession_HostSessionRequest` 등) → LC 중복 DLL(`*-0001.dll`) — `Binaries`/`Intermediate` 클린 후 재빌드.
+- **라이브 코딩 금지** — `LiveCoding.Compile`/Ctrl+Alt+F11 쓰지 않음. C++는 에디터 종료 → `-NoLiveCoding` 전체 빌드 → 재시작 (`stack-unreal.mdc`). `*-000N.dll` 남기면 Fatal `Cannot replace existing object of a different class` — Binaries 클린 후 재빌드.
 - 1P용 `PlayerCameraManager` 서브클래스 추가 시도 → Lyra는 **CameraMode** 확장이 정석
+- 히어로마다 `BP_FpsHero` 자식·`HeroData`를 `Game/`에 쌓음 → **`Heroes/Shared` + `Heroes/{Id}`** (Lyra `Game/` 납작 구조 ≠ 우리 로스터)
 - `UE5NetworkFps.uproject`·`Source/UE5NetworkFps/` 참조 → **존재하지 않음**
 - MCP 8091 거부 → **에디터 먼저**, `UE_PROJECT_PATH`가 `LyraStarterGame.uproject`인지, 플러그인 활성·Listen Ports 확인
 - 장기 기록을 `.cursor/rules/`에만 쓰려 함 → **`README.md`·`Docs/`** 가 사람·포폴용

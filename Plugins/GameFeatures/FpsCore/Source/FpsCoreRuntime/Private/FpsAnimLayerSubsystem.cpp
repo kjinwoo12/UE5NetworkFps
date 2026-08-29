@@ -6,6 +6,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "FpsAnimLayerComponent.h"
+#include "FpsFirstPersonWeaponComponent.h"
 #include "GameFramework/Character.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FpsAnimLayerSubsystem)
@@ -60,11 +61,16 @@ void UFpsAnimLayerSubsystem::TryAddAnimLayerComponent(ACharacter* Character)
 		return;
 	}
 
-	if (Character->FindComponentByClass<UFpsAnimLayerComponent>())
+	if (!Character->FindComponentByClass<UFpsAnimLayerComponent>())
 	{
-		return;
+		UFpsAnimLayerComponent* NewComp = NewObject<UFpsAnimLayerComponent>(Character, TEXT("FpsAnimLayer"));
+		NewComp->RegisterComponent();
 	}
 
-	UFpsAnimLayerComponent* NewComp = NewObject<UFpsAnimLayerComponent>(Character, TEXT("FpsAnimLayer"));
-	NewComp->RegisterComponent();
+	if (!Character->FindComponentByClass<UFpsFirstPersonWeaponComponent>())
+	{
+		UFpsFirstPersonWeaponComponent* WeaponView =
+			NewObject<UFpsFirstPersonWeaponComponent>(Character, TEXT("FpsFirstPersonWeapon"));
+		WeaponView->RegisterComponent();
+	}
 }
