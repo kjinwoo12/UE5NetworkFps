@@ -5,13 +5,14 @@
 #include "Animation/AnimInstance.h"
 #include "Components/ChildActorComponent.h"
 #include "Components/PrimitiveComponent.h"
+#include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
 #include "Equipment/LyraEquipmentInstance.h"
 #include "Equipment/LyraEquipmentManagerComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Pawn.h"
-#include "TimerManager.h"
+#include "Weapons/LyraWeaponInstance.h"
 #include "UObject/UnrealType.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FpsFirstPersonWeaponComponent)
@@ -56,26 +57,62 @@ namespace FpsFirstPersonWeapon_Private
 		OutLocationCS = FirstPersonMesh->GetComponentTransform().InverseTransformPosition(SocketWorld.GetLocation());
 		return true;
 	}
+
+	static bool TryGetLeftHandFallbackComponentSpace(
+		const USkeletalMeshComponent* WeaponMesh,
+		const USkeletalMeshComponent* FirstPersonMesh,
+		const FVector& WeaponLocalOffset,
+		FVector& OutLocationCS)
+	{
+		if (!WeaponMesh || !FirstPersonMesh)
+		{
+			return false;
+		}
+
+		const FName ReferenceSockets[] = { FName(TEXT("Hand_R")), FName(TEXT("Grip_R")), FName(TEXT("Grip")) };
+		for (FName SocketName : ReferenceSockets)
+		{
+			if (!WeaponMesh->DoesSocketExist(SocketName))
+			{
+				continue;
+			}
+
+			const FTransform SocketWorld = WeaponMesh->GetSocketTransform(SocketName, RTS_World);
+			const FVector TargetWorld = SocketWorld.GetLocation() + SocketWorld.TransformVectorNoScale(WeaponLocalOffset);
+			OutLocationCS = FirstPersonMesh->GetComponentTransform().InverseTransformPosition(TargetWorld);
+			return true;
+		}
+
+		return false;
+	}
 }
 
 UFpsFirstPersonWeaponComponent::UFpsFirstPersonWeaponComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.TickGroup = TG_PostUpdateWork;
 	SetIsReplicatedByDefault(false);
 }
 
 void UFpsFirstPersonWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	SyncFirstPersonWeaponVisuals();
+}
 
-	// Do not gate on IsLocallyControlled here — BeginPlay often runs before Possess.
-	if (UWorld* World = GetWorld())
+void UFpsFirstPersonWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!Pawn || !Pawn->IsLocallyControlled())
 	{
-		World->GetTimerManager().SetTimer(
-			SyncTimerHandle,
-			FTimerDelegate::CreateUObject(this, &ThisClass::SyncFirstPersonWeaponVisuals),
-			0.05f,
-			/*bLoop=*/true);
+		return;
+	}
+
+	if (USkeletalMeshComponent* FirstPersonMesh = FindFirstPersonMesh())
+	{
+		EnsureTickPrerequisites(FirstPersonMesh);
 	}
 
 	SyncFirstPersonWeaponVisuals();
@@ -83,15 +120,27 @@ void UFpsFirstPersonWeaponComponent::BeginPlay()
 
 void UFpsFirstPersonWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().ClearTimer(SyncTimerHandle);
-	}
-
-	ApplyWeaponHandIk(false, nullptr);
-	bLastHandIkEnabled = false;
+	ApplyWeaponHandIk(false, false, nullptr);
+	bLastAnyHandIkEnabled = false;
 	ClearLocalVisuals();
 	Super::EndPlay(EndPlayReason);
+}
+
+void UFpsFirstPersonWeaponComponent::EnsureTickPrerequisites(USkeletalMeshComponent* FirstPersonMesh)
+{
+	if (bCachedTickPrerequisites || !FirstPersonMesh)
+	{
+		return;
+	}
+
+	PrimaryComponentTick.AddPrerequisite(FirstPersonMesh, FirstPersonMesh->PrimaryComponentTick);
+
+	if (USceneComponent* AttachParent = FirstPersonMesh->GetAttachParent())
+	{
+		FirstPersonMesh->AddTickPrerequisiteComponent(AttachParent);
+	}
+
+	bCachedTickPrerequisites = true;
 }
 
 void UFpsFirstPersonWeaponComponent::SetAnimInstanceBool(UAnimInstance* AnimInstance, FName PropertyName, bool bValue)
@@ -198,7 +247,7 @@ void UFpsFirstPersonWeaponComponent::ClearLocalVisuals()
 	LocalWeaponVisuals.Reset();
 }
 
-void UFpsFirstPersonWeaponComponent::ApplyWeaponHandIk(bool bEnableHandIk, AActor* LocalWeaponVisual) const
+void UFpsFirstPersonWeaponComponent::ApplyWeaponHandIk(bool bEnableLeftHandIk, bool bEnableRightHandIk, AActor* LocalWeaponVisual)
 {
 	USkeletalMeshComponent* FirstPersonMesh = FindFirstPersonMesh();
 	if (!FirstPersonMesh)
@@ -212,9 +261,29 @@ void UFpsFirstPersonWeaponComponent::ApplyWeaponHandIk(bool bEnableHandIk, AActo
 		return;
 	}
 
-	SetAnimInstanceBool(AnimInstance, TEXT("bWeaponEquipped"), bEnableHandIk);
+	const bool bAnyHandIk = bEnableLeftHandIk || bEnableRightHandIk;
+	const bool bDisableRightHandIk = !bEnableRightHandIk;
+	const bool bDisableLeftHandIk = !bEnableLeftHandIk;
 
-	if (!bEnableHandIk || !LocalWeaponVisual)
+	if (bAnyHandIk != bLastAnyHandIkEnabled)
+	{
+		SetAnimInstanceBool(AnimInstance, TEXT("bWeaponEquipped"), bAnyHandIk);
+		bLastAnyHandIkEnabled = bAnyHandIk;
+	}
+
+	if (bDisableRightHandIk != bLastDisableRightHandIk)
+	{
+		SetAnimInstanceBool(AnimInstance, TEXT("DisableRHandIK"), bDisableRightHandIk);
+		bLastDisableRightHandIk = bDisableRightHandIk;
+	}
+
+	if (bDisableLeftHandIk != bLastDisableLeftHandIk)
+	{
+		SetAnimInstanceBool(AnimInstance, TEXT("DisableLHandIK"), bDisableLeftHandIk);
+		bLastDisableLeftHandIk = bDisableLeftHandIk;
+	}
+
+	if (!bAnyHandIk || !LocalWeaponVisual)
 	{
 		return;
 	}
@@ -225,51 +294,118 @@ void UFpsFirstPersonWeaponComponent::ApplyWeaponHandIk(bool bEnableHandIk, AActo
 		return;
 	}
 
-	const FName RightCandidates[] = { RightHandSocketName, FName(TEXT("Hand_R")), FName(TEXT("Grip_R")), FName(TEXT("Grip")) };
-	const FName LeftCandidates[] = { LeftHandSocketName, FName(TEXT("Hand_L")), FName(TEXT("Grip_L")) };
-
-	FVector RightEffectorCS = FVector::ZeroVector;
-	FVector LeftEffectorCS = FVector::ZeroVector;
-	bool bHasRight = false;
-	bool bHasLeft = false;
-
-	for (FName Candidate : RightCandidates)
+	auto SetVectorIfChanged = [AnimInstance](FVector& LastValue, FName PropertyName, const FVector& NewValue)
 	{
-		if (FpsFirstPersonWeapon_Private::TryGetSocketComponentSpace(WeaponMesh, FirstPersonMesh, Candidate, RightEffectorCS))
+		if (!LastValue.Equals(NewValue, KINDA_SMALL_NUMBER))
 		{
-			bHasRight = true;
-			break;
+			LastValue = NewValue;
+			SetAnimInstanceVector(AnimInstance, PropertyName, NewValue);
 		}
-	}
-	for (FName Candidate : LeftCandidates)
+	};
+
+	if (bEnableRightHandIk)
 	{
-		if (FpsFirstPersonWeapon_Private::TryGetSocketComponentSpace(WeaponMesh, FirstPersonMesh, Candidate, LeftEffectorCS))
+		const FName RightCandidates[] = { RightHandSocketName, FName(TEXT("Hand_R")), FName(TEXT("Grip_R")), FName(TEXT("Grip")) };
+		FVector RightEffectorCS = FVector::ZeroVector;
+		bool bHasRight = false;
+
+		for (FName Candidate : RightCandidates)
 		{
-			bHasLeft = true;
-			break;
+			if (FpsFirstPersonWeapon_Private::TryGetSocketComponentSpace(WeaponMesh, FirstPersonMesh, Candidate, RightEffectorCS))
+			{
+				bHasRight = true;
+				break;
+			}
 		}
+
+		if (!bHasRight)
+		{
+			RightEffectorCS = FirstPersonMesh->GetSocketTransform(TEXT("weapon_r"), RTS_Component).GetLocation();
+		}
+
+		const FVector RightJointCS = FirstPersonMesh->GetSocketTransform(TEXT("lowerarm_r"), RTS_Component).GetLocation();
+		SetVectorIfChanged(LastEffectorLocation_R, TEXT("EffectorLocation_R"), RightEffectorCS);
+		SetVectorIfChanged(LastJointTarget_R, TEXT("JointTarget_R"), RightJointCS);
 	}
 
-	if (!bHasRight)
+	if (bEnableLeftHandIk)
 	{
-		// Fallback: weapon_r bone on the FP mesh (attach socket).
-		RightEffectorCS = FirstPersonMesh->GetSocketTransform(TEXT("weapon_r"), RTS_Component).GetLocation();
-		bHasRight = true;
+		const FName LeftCandidates[] = { LeftHandSocketName, FName(TEXT("Hand_L")), FName(TEXT("Grip_L")) };
+		FVector LeftEffectorCS = FVector::ZeroVector;
+		bool bHasLeft = false;
+
+		for (FName Candidate : LeftCandidates)
+		{
+			if (FpsFirstPersonWeapon_Private::TryGetSocketComponentSpace(WeaponMesh, FirstPersonMesh, Candidate, LeftEffectorCS))
+			{
+				bHasLeft = true;
+				break;
+			}
+		}
+
+		if (!bHasLeft)
+		{
+			bHasLeft = FpsFirstPersonWeapon_Private::TryGetLeftHandFallbackComponentSpace(
+				WeaponMesh,
+				FirstPersonMesh,
+				LeftHandGripFallbackOffset,
+				LeftEffectorCS);
+		}
+
+		if (!bHasLeft)
+		{
+			LeftEffectorCS = FirstPersonMesh->GetSocketTransform(TEXT("weapon_r"), RTS_Component).GetLocation()
+				+ FVector(0.f, 12.f, 4.f);
+		}
+
+		const FVector LeftJointCS = FirstPersonMesh->GetSocketTransform(TEXT("lowerarm_l"), RTS_Component).GetLocation();
+		SetVectorIfChanged(LastEffectorLocation_L, TEXT("EffectorLocation_L"), LeftEffectorCS);
+		SetVectorIfChanged(LastJointTarget_L, TEXT("JointTarget_L"), LeftJointCS);
 	}
-	if (!bHasLeft)
+}
+
+bool UFpsFirstPersonWeaponComponent::HasActiveWeaponAnimLayer()
+{
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (!Pawn)
 	{
-		LeftEffectorCS = RightEffectorCS + FVector(0.f, 12.f, 4.f);
-		bHasLeft = true;
+		return false;
 	}
 
-	// Elbow hints: pull slightly toward the body so the chain bends naturally.
-	const FVector RightJointCS = FirstPersonMesh->GetSocketTransform(TEXT("lowerarm_r"), RTS_Component).GetLocation();
-	const FVector LeftJointCS = FirstPersonMesh->GetSocketTransform(TEXT("lowerarm_l"), RTS_Component).GetLocation();
+	ULyraEquipmentManagerComponent* EquipmentManager =
+		Pawn->FindComponentByClass<ULyraEquipmentManagerComponent>();
+	if (!EquipmentManager)
+	{
+		return false;
+	}
 
-	SetAnimInstanceVector(AnimInstance, TEXT("EffectorLocation_R"), RightEffectorCS);
-	SetAnimInstanceVector(AnimInstance, TEXT("EffectorLocation_L"), LeftEffectorCS);
-	SetAnimInstanceVector(AnimInstance, TEXT("JointTarget_R"), RightJointCS);
-	SetAnimInstanceVector(AnimInstance, TEXT("JointTarget_L"), LeftJointCS);
+	ULyraWeaponInstance* WeaponInstance = EquipmentManager->GetFirstInstanceOfType<ULyraWeaponInstance>();
+	if (!WeaponInstance)
+	{
+		return false;
+	}
+
+	return WeaponInstance->PickBestAnimLayer(/*bEquipped=*/true, FGameplayTagContainer()) != nullptr;
+}
+
+bool UFpsFirstPersonWeaponComponent::ShouldApplyLeftHandIk(AActor* LocalWeaponVisual) const
+{
+	return bApplyLeftHandIk && LocalWeaponVisual != nullptr;
+}
+
+bool UFpsFirstPersonWeaponComponent::ShouldApplyRightHandIk(AActor* LocalWeaponVisual)
+{
+	if (!bApplyRightHandIk || !LocalWeaponVisual)
+	{
+		return false;
+	}
+
+	if (!bSkipRightHandIkWhenWeaponAnimLayerActive)
+	{
+		return true;
+	}
+
+	return !HasActiveWeaponAnimLayer();
 }
 
 void UFpsFirstPersonWeaponComponent::SyncFirstPersonWeaponVisuals()
@@ -333,8 +469,8 @@ void UFpsFirstPersonWeaponComponent::SyncFirstPersonWeaponVisuals()
 		{
 			ClearLocalVisuals();
 		}
-		ApplyWeaponHandIk(false, nullptr);
-		bLastHandIkEnabled = false;
+		ApplyWeaponHandIk(false, false, nullptr);
+		bLastAnyHandIkEnabled = false;
 		LastSyncSignature = 0;
 		return;
 	}
@@ -411,6 +547,10 @@ void UFpsFirstPersonWeaponComponent::SyncFirstPersonWeaponVisuals()
 	}
 
 	AActor* PrimaryVisual = LocalWeaponVisuals.Num() > 0 ? LocalWeaponVisuals[0].Get() : nullptr;
-	ApplyWeaponHandIk(PrimaryVisual != nullptr, PrimaryVisual);
-	bLastHandIkEnabled = PrimaryVisual != nullptr;
+	const bool bEnableLeftHandIk = ShouldApplyLeftHandIk(PrimaryVisual);
+	const bool bEnableRightHandIk = ShouldApplyRightHandIk(PrimaryVisual);
+	ApplyWeaponHandIk(
+		bEnableLeftHandIk,
+		bEnableRightHandIk,
+		(bEnableLeftHandIk || bEnableRightHandIk) ? PrimaryVisual : nullptr);
 }

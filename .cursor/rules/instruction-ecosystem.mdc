@@ -12,12 +12,12 @@ alwaysApply: true
 
 배포 번들만. 워크스페이스 자동 로드 아님. 프로젝트 지침 = `.cursor/rules`·`skills` — 플러그인과 별개.
 
-## caveman 응답 (강제·매 턴)
+## 사용자 대면 문체 (기본 normal)
 
-사용자 대면 설명·요약 = caveman **full**. 사용자 언어(예: 한국어) + caveman.  
-해제: `stop caveman` / `normal mode`. 코드·커밋·PR 본문 = 정상.  
-Auto-Clarity: 보안·되돌릴 수 없는 작업·순서 모호·재질문 → 잠깐 일반 문장.  
-상세: `caveman-mode.mdc` · `skills/caveman/SKILL.md` (스킬 안 읽어도 이 절 준수).
+**기본:** 사용자에게 설명·요약·진행 보고 = **normal mode** (완전한 문장, caveman **금지**).  
+**caveman:** `/caveman` · `caveman on` 등 **명시 요청** 시만. 복귀: `stop caveman` / `normal mode`.  
+코드·커밋·PR 본문 = 항상 정상 형식.  
+상세: `caveman-mode.mdc` · `skills/caveman/SKILL.md`.
 
 ## 레이어
 
@@ -26,7 +26,7 @@ Auto-Clarity: 보안·되돌릴 수 없는 작업·순서 모호·재질문 → 
 | 불변 | `invariant-rules.mdc` | RULE-01~06 |
 | 도메인 | `project-domain.mdc` | Lyra·GF·1P |
 | 메타 | `instruction-ecosystem.mdc` | 이 파일 |
-| 문체 | `caveman-mode.mdc` | 압축 응답 |
+| 문체 | `caveman-mode.mdc` | 기본 normal; caveman opt-in |
 | 스테이징 | `git-staging-noise.mdc` | git add 필터 |
 | 스택 | `stack-*.mdc`, `solid-principles.mdc` | globs |
 | 행동 | `karpathy-guidelines.mdc` | 코딩 행동 (globs) |
@@ -43,7 +43,7 @@ Auto-Clarity: 보안·되돌릴 수 없는 작업·순서 모호·재질문 → 
 작업 타입 전용 공정?           → skills/{name}/SKILL.md · commands/
 이 repo·도메인?              → project-domain.mdc
 언어·프레임워크·경로 패턴?   → stack-*.mdc, solid-principles (globs)
-사용자 대면 응답 문체?       → caveman-mode.mdc
+사용자 대면 응답 문체?       → caveman-mode.mdc (기본 normal)
 지침 토큰·채점?              → cursor-optimizer / context-health
 ```
 

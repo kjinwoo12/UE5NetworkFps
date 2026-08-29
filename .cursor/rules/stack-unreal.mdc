@@ -27,6 +27,19 @@ alwaysApply: false
 4. 에디터 재시작 후 PIE
 5. `Saved/Config/.../EditorPerProjectUserSettings.ini` → `LiveCodingSettings` **`bEnabled=False`** 유지
 
+### C++ 변경 후 빌드 검증 (**필수**)
+
+**에이전트가 `Source/`·`Plugins/**/Source/`의 `.h`/`.cpp`를 수정하면, 작업 완료 보고 전에 반드시 UBT 빌드로 컴파일 성공을 확인한다.** 추측·「빌드해 보세요」로 끝내지 않는다.
+
+```bash
+"<UE_ROOT>/Engine/Build/BatchFiles/Build.bat" LyraEditor Win64 Development \
+  -Project="<repo>/LyraStarterGame.uproject" -WaitMutex
+```
+
+- **성공(exit 0)** 확인 후에만 완료 보고. 실패 시 오류 수정 → **재빌드**까지 같은 턴에서 마무리.
+- 에디터가 열려 있어도 UBT는 시도; LC·잠금으로 실패하면 에디터 종료 후 재시도.
+- C++ diff 없음(BP·Content·`.mdc`만) → 이 단계 생략 가능.
+
 ### LC 잔재 복구
 
 증상: `Cannot replace existing object of a different class` (`CommonSession_HostSessionRequest` CDO 등).
