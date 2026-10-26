@@ -5,6 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/Character.h"
 #include "LyraEquipmentDefinition.h"
+#include "LyraEquipmentManagerComponent.h"
 #include "Net/UnrealNetwork.h"
 
 #include "Iris/ReplicationSystem/ReplicationFragmentUtil.h"
@@ -111,5 +112,17 @@ void ULyraEquipmentInstance::OnUnequipped()
 
 void ULyraEquipmentInstance::OnRep_Instigator()
 {
+}
+
+void ULyraEquipmentInstance::OnRep_SpawnedActors()
+{
+	// On clients the actors usually arrive after the equipment entry.
+	if (APawn* OwningPawn = GetPawn())
+	{
+		if (ULyraEquipmentManagerComponent* EquipmentManager = OwningPawn->FindComponentByClass<ULyraEquipmentManagerComponent>())
+		{
+			EquipmentManager->BroadcastEquipmentChanged();
+		}
+	}
 }
 

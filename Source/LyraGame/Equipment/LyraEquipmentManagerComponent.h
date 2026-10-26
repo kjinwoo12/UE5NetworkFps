@@ -21,6 +21,9 @@ struct FLyraEquipmentList;
 struct FNetDeltaSerializeInfo;
 struct FReplicationFlags;
 
+/** Equipment was added or removed, or an instance's spawned actors replicated (server and clients). */
+DECLARE_MULTICAST_DELEGATE_OneParam(FLyraEquipmentChangedDelegate, ULyraEquipmentManagerComponent* /*EquipmentManager*/);
+
 /** A single piece of applied equipment */
 USTRUCT(BlueprintType)
 struct FLyraAppliedEquipmentEntry : public FFastArraySerializerItem
@@ -81,6 +84,7 @@ public:
 
 private:
 	ULyraAbilitySystemComponent* GetAbilitySystemComponent() const;
+	void BroadcastChanged() const;
 
 	friend ULyraEquipmentManagerComponent;
 
@@ -149,6 +153,10 @@ public:
 	{
 		return (T*)GetFirstInstanceOfType(T::StaticClass());
 	}
+
+	/** Fires on clients too; listeners should read the list on the next tick (removals broadcast before the entry is gone). */
+	FLyraEquipmentChangedDelegate OnEquipmentChanged;
+	void BroadcastEquipmentChanged() { OnEquipmentChanged.Broadcast(this); }
 
 private:
 	UPROPERTY(Replicated)

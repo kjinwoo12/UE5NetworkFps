@@ -35,6 +35,7 @@ void FLyraEquipmentList::PreReplicatedRemove(const TArrayView<int32> RemovedIndi
 			Entry.Instance->OnUnequipped();
 		}
  	}
+	BroadcastChanged();
 }
 
 void FLyraEquipmentList::PostReplicatedAdd(const TArrayView<int32> AddedIndices, int32 FinalSize)
@@ -47,6 +48,7 @@ void FLyraEquipmentList::PostReplicatedAdd(const TArrayView<int32> AddedIndices,
 			Entry.Instance->OnEquipped();
 		}
 	}
+	BroadcastChanged();
 }
 
 void FLyraEquipmentList::PostReplicatedChange(const TArrayView<int32> ChangedIndices, int32 FinalSize)
@@ -56,6 +58,14 @@ void FLyraEquipmentList::PostReplicatedChange(const TArrayView<int32> ChangedInd
 // 		const FGameplayTagStack& Stack = Stacks[Index];
 // 		TagToCountMap[Stack.Tag] = Stack.StackCount;
 // 	}
+}
+
+void FLyraEquipmentList::BroadcastChanged() const
+{
+	if (ULyraEquipmentManagerComponent* EquipmentManager = Cast<ULyraEquipmentManagerComponent>(OwnerComponent))
+	{
+		EquipmentManager->BroadcastEquipmentChanged();
+	}
 }
 
 ULyraAbilitySystemComponent* FLyraEquipmentList::GetAbilitySystemComponent() const
@@ -159,6 +169,8 @@ ULyraEquipmentInstance* ULyraEquipmentManagerComponent::EquipItem(TSubclassOf<UL
 			{
 				AddReplicatedSubObject(Result);
 			}
+
+			BroadcastEquipmentChanged();
 		}
 	}
 	return Result;
@@ -175,6 +187,7 @@ void ULyraEquipmentManagerComponent::UnequipItem(ULyraEquipmentInstance* ItemIns
 
 		ItemInstance->OnUnequipped();
 		EquipmentList.RemoveEntry(ItemInstance);
+		BroadcastEquipmentChanged();
 	}
 }
 
