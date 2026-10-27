@@ -50,6 +50,48 @@ public:
 	FVector GetWeaponViewOffset(bool bTrueFirstPerson) const { return bTrueFirstPerson ? TrueFirstPersonWeaponViewOffset : WeaponViewOffset; }
 	FRotator GetWeaponViewRotation(bool bTrueFirstPerson) const { return bTrueFirstPerson ? TrueFirstPersonWeaponViewRotation : WeaponViewRotation; }
 
+	/**
+	 * Aiming down sights (UFpsFirstPersonSettings::AimTag on the pawn's ASC, e.g. GA_Fps_ADS): the
+	 * weapon bone moves from the hip placement above to this view transform. Set it so the sight
+	 * line lies on view X (screen center), the rear sight AimWeaponViewOffset.X + its distance from
+	 * weapon_r in front of the eye. Both rigs use it.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim", meta = (EditCondition = "bCanAim"))
+	FVector AimWeaponViewOffset = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim", meta = (EditCondition = "bCanAim"))
+	FRotator AimWeaponViewRotation = FRotator::ZeroRotator;
+
+	/** Off: the weapon stays at the hip and the view does not zoom while aiming (the movement and input changes of the ability still apply). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim")
+	bool bCanAim = false;
+
+	/** Time from hip to sights and back (s). The camera zoom and the weapon move use the same blend. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim", meta = (EditCondition = "bCanAim", ClampMin = "0.0", Units = "s"))
+	float AimBlendTime = 0.2f;
+
+	/** Camera field of view while aiming, as a fraction of the camera mode's (1 = no zoom). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim", meta = (EditCondition = "bCanAim", ClampMin = "0.1", ClampMax = "1.0"))
+	float AimFieldOfViewScale = 0.8f;
+
+	/** Weapon sway and turn lag while aiming, as a fraction of the hip values: the sight has to stay on the screen center. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Aim", meta = (EditCondition = "bCanAim", ClampMin = "0.0", ClampMax = "1.0"))
+	float AimWeaponSwayScale = 0.25f;
+
+	/** Weapon bone transform in view space for an aim blend (0 hip .. 1 sights). */
+	FTransform GetWeaponViewTransform(bool bTrueFirstPerson, float AimAlpha) const
+	{
+		const FTransform Hip(GetWeaponViewRotation(bTrueFirstPerson), GetWeaponViewOffset(bTrueFirstPerson));
+		if (!bCanAim || AimAlpha <= 0.0f)
+		{
+			return Hip;
+		}
+		const FTransform Aim(AimWeaponViewRotation, AimWeaponViewOffset);
+		FTransform Blended;
+		Blended.Blend(Hip, Aim, FMath::Min(AimAlpha, 1.0f));
+		return Blended;
+	}
+
 	/** Keep the support hand where the grip animation puts it relative to the primary hand. Off for one-handed weapons. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Support Hand")
 	bool bSupportHandFollowsAnimation = true;

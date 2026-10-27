@@ -149,6 +149,27 @@ Lyra 이동 애니메이션은 걸음마다 손가락을 폈다 오므린다(뒤
 | Two Bone IK `hand_l` | Effector·Joint 컴포넌트 공간 | `EffectorLocation_L`, `JointTarget_L`, 알파 `bWeaponEquipped` |
 | Transform (Modify) Bone `hand_l` | 회전 Replace, 컴포넌트 공간 | `LeftHandRotation` |
 
+### 4.8 정조준 (ADS)
+
+우클릭(`IA_ADS`, `InputTag.Weapon.ADS`)이면 화면이 조금 줌되고 총이 화면 가운데 가늠자 자리로 온다. 다른 플레이어에게는 Lyra 3인칭 조준 자세가 보인다.
+
+| 역할 | 클래스 / 에셋 |
+|---|---|
+| 조준 어빌리티 | `GA_Fps_ADS` (`/FpsCore/Heroes/Shared/Abilities/`). Lyra `GA_ADS` 복제본에서 3인칭 ADS 카메라(`SetCameraMode`/`ClearCameraMode`) 실행선만 끊었다. 이동 속도·감도(`IMC_ADS_Speed`)·소리·UI 알림은 그대로 |
+| 어빌리티 세트 | `AbilitySet_FpsHero` (`/FpsCore/Heroes/Shared/`) = `AbilitySet_ShooterHero`에서 `GA_ADS`만 `GA_Fps_ADS`로. `HeroData_Soldier`, `HeroData_FpsGame`이 사용 |
+| 조준 상태 | `UFpsFirstPersonSettings::AimTag`(`Event.Movement.ADS`, 어빌리티 활성 태그)가 Pawn ASC에 있으면 조준 (`FpsAim::IsAiming`) |
+| 줌 | `ULyraCameraMode_FirstPerson`: `FieldOfView × AimFieldOfViewScale` |
+| 총 이동 | `UFpsFirstPersonAnimInstance`: 총 뼈를 허리 배치 → `AimWeaponViewOffset/Rotation`으로 블렌드 |
+
+- 카메라와 애님이 각자 `FFpsAimBlend`를 같은 프로파일 값(`AimBlendTime`, 양끝 SmoothStep)으로 돌려서 줌과 총이 같이 움직인다. 카메라는 쥔 무기의 프로파일을 Pawn에 붙은 무기 액터(`UFpsWeaponGripComponent`)에서 찾는다(조준 중이거나 돌아오는 동안만).
+- Lyra `GA_ADS`를 그대로 쓰면 `CM_ThirdPersonADS`로 바뀌어 1인칭에서 3인칭 어깨 카메라가 됐다. 그래서 1인칭 카메라 모드 안에서 줌한다(카메라 모드 둘을 쌓으면 아래 모드가 빠질 때 1인칭 렌더링 설정이 한 프레임 꺼진다).
+- 조준 중에는 흔들림과 회전 관성을 `AimWeaponSwayScale`(0.25)배로 줄인다(가늠자가 화면 가운데에 있어야 함).
+- 조준 자세에서는 손 고정(4.1)을 캡처하지 않는다(3인칭 ADS 자세는 대기 자세가 아님).
+- 보조 손 회전 피벗과 총열 축은 레거시 배치 기준 총 공간에서 구해 총과 함께 옮긴다(허리 배치에서는 이전과 같은 값).
+- 3인칭: `ReplicateActivationOwnedTags=True`라 `Event.Movement.ADS`가 다른 클라이언트에 복제되고, `ABP_Mannequin_Base`의 `GameplayTag_IsADS`가 조준 자세를 고른다(본인 그림자도 조준 자세).
+
+**소총 조준 값.** `SK_Rifle`에는 가늠자 소켓이 없어서 메시 정점으로 쟀다(`SM_Rifle` = `SK_Rifle` + (0, -17.7, -7.2)). 가늠쇠 끝과 가늠자 구멍 중심이 메시 z 16.7(SK 기준)에서 총열과 평행이고, 가늠자는 메시 y 1.5. 무기 액터는 `weapon_r`에 yaw -90으로 붙으므로 총 뼈 공간에서 가늠선은 (x, 0, 16.73), 가늠자는 x 1.5. 가늠자를 눈 앞 20cm에 두면 `AimWeaponViewOffset` = (18.5, 0, -16.73), 회전 0. PIE에서 가늠자·가늠쇠가 시점 (20, 0, 0), (52.5, 0, 0)에 왔다(오차 0.00cm).
+
 ## 5. 설정값
 
 ### 5.1 `UFpsFirstPersonSettings` (`[/Script/FpsCoreRuntime.FpsFirstPersonSettings]`)
@@ -176,6 +197,7 @@ PIE 중에도 CDO 값을 바꾸면 바로 반영된다.
 | `bFirstPersonRendering` | true | 엔진 1인칭 렌더링 레이어(7장) |
 | `FirstPersonScale`, `FirstPersonFieldOfView` | 0.3, 0(장면과 같음) | 1인칭 레이어 깊이 배율, 뷰모델 FOV |
 | `WorldLayerBones`, `FirstPersonLayerBones` | `thigh_l/r`, `spine_01` | 월드 레이어(다리) / 1인칭 레이어 경계 |
+| `AimTag` | `Event.Movement.ADS` | 이 태그가 Pawn ASC에 있으면 정조준(4.8). 비우면 조준 안 함 |
 
 `[/Script/FpsCoreRuntime.FpsFirstPersonAnimInstance]`: `GripCaptureSettleSeconds` = 0.3, `GripCaptureMaxTurnRate` = 45°/s(시점·상체가 이보다 빨리 돌면 캡처하지 않음. 장착 직후 대기 상태에서도 39°/s까지 흔들린다).
 
@@ -189,6 +211,11 @@ PIE 중에도 CDO 값을 바꾸면 바로 반영된다.
 | `bSupportHandFollowsAnimation` | true | 한 손 무기는 false |
 | `SupportGripRollDegrees` | 30 | 보조 손을 총열 축 둘레로 돌림 |
 | `SupportGripPivotViewOffset` | (47, 7.7, -16.8) | `WeaponViewOffset` 기준 총열 축 위 한 점 |
+| `bCanAim` | true | 정조준 사용(끄면 줌·총 이동 없음) |
+| `AimWeaponViewOffset/Rotation` | (18.5, 0, -16.73), 0 | 정조준 총 뼈 배치(가늠선이 시점 X축) |
+| `AimBlendTime` | 0.2초 | 허리 ↔ 정조준 시간 |
+| `AimFieldOfViewScale` | 0.8 | 정조준 시야각 배율(80° → 64°) |
+| `AimWeaponSwayScale` | 0.25 | 정조준 중 흔들림·회전 관성 배율 |
 
 ## 6. 레거시 모드 (되돌리기)
 

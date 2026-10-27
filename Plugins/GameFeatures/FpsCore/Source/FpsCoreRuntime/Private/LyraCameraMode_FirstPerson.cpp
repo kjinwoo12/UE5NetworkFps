@@ -4,6 +4,7 @@
 
 #include "Camera/LyraCameraComponent.h"
 #include "FpsFirstPersonSettings.h"
+#include "FpsWeaponGripProfile.h"
 #include "GameFramework/Character.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(LyraCameraMode_FirstPerson)
@@ -28,14 +29,26 @@ void ULyraCameraMode_FirstPerson::UpdateView(float DeltaTime)
 	View.Location = PivotLocation;
 	View.Rotation = PivotRotation;
 	View.ControlRotation = View.Rotation;
-	View.FieldOfView = FieldOfView;
+	View.FieldOfView = UpdateAimFieldOfView(DeltaTime);
 
 	ApplyFirstPersonRendering(GetDefault<UFpsFirstPersonSettings>()->UseFirstPersonRendering());
+}
+
+float ULyraCameraMode_FirstPerson::UpdateAimFieldOfView(float DeltaTime)
+{
+	// The profile is only looked up while aiming or blending back.
+	const APawn* Pawn = Cast<APawn>(GetTargetActor());
+	const bool bAiming = FpsAim::IsAiming(Pawn);
+	const UFpsWeaponGripProfile* Profile = (bAiming || AimBlend.GetAlpha() > 0.0f) ? FpsAim::FindHeldGripProfile(Pawn) : nullptr;
+	AimBlend.Update(bAiming, Profile, DeltaTime);
+	const float Alpha = AimBlend.GetAlpha();
+	return (Profile && Alpha > 0.0f) ? FieldOfView * FMath::Lerp(1.0f, Profile->AimFieldOfViewScale, Alpha) : FieldOfView;
 }
 
 void ULyraCameraMode_FirstPerson::OnDeactivation()
 {
 	Super::OnDeactivation();
+	AimBlend.Reset();
 	ApplyFirstPersonRendering(false);
 }
 

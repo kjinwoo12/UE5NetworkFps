@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Engine/DeveloperSettings.h"
+#include "GameplayTagContainer.h"
 
 #include "FpsFirstPersonSettings.generated.h"
 
@@ -222,6 +223,14 @@ public:
 	/** Bones whose subtree is hidden on the world layer copy (everything drawn in the first person layer). */
 	UPROPERTY(Config, EditAnywhere, Category = "Rendering", meta = (EditCondition = "bFirstPersonRendering"))
 	TArray<FName> FirstPersonLayerBones = { TEXT("spine_01") };
+
+	/**
+	 * Tag on the pawn's ability system while aiming down sights (the ADS ability's activation owned
+	 * tag). The camera zooms and the weapon moves to the sights as the held weapon's grip profile says
+	 * (UFpsWeaponGripProfile, Aim). Empty = never aim. See FpsAim.
+	 */
+	UPROPERTY(Config, EditAnywhere, Category = "Aim")
+	FGameplayTag AimTag;
 
 	bool UseFirstPersonRendering() const { return bTrueFirstPerson && bFirstPersonRendering; }
 

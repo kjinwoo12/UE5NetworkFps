@@ -202,6 +202,7 @@ void UFpsFirstPersonAnimInstance::UpdateGripCapture(const APawn* Pawn, const USk
 		&& !Movement->IsFalling()
 		&& Character->GetVelocity().SizeSquared() < FMath::Square(5.0f)
 		&& !SourceAnimInstance->IsAnyMontagePlaying()
+		&& !bAiming
 		&& ViewTurnRate < GripCaptureMaxTurnRate
 		&& ChestTurnRate < GripCaptureMaxTurnRate;
 
@@ -266,12 +267,15 @@ void UFpsFirstPersonAnimInstance::UpdateWeaponGrip(const APawn* Pawn, float Delt
 	PrimaryReach = FArmReach();
 	SupportReach = FArmReach();
 
+	bAiming = FpsAim::IsAiming(Pawn);
 	const APlayerController* PlayerController = Pawn ? Pawn->GetController<APlayerController>() : nullptr;
 	const APlayerCameraManager* CameraManager = PlayerController ? PlayerController->PlayerCameraManager.Get() : nullptr;
 	const USkeletalMeshComponent* MeshComponent = GetSkelMeshComponent();
 	const USkeletalMeshComponent* SourceMesh = FindGripSourceMesh(Pawn);
 	if (!GripProfile || !CameraManager || !MeshComponent || !SourceMesh)
 	{
+		AimBlend.Reset();
+		AimAlpha = 0.0f;
 		SetBoolVariable(GripEnabledVariable, false);
 		return;
 	}
@@ -310,8 +314,10 @@ void UFpsFirstPersonAnimInstance::UpdateWeaponGrip(const APawn* Pawn, float Delt
 		? LockedWeaponInPrimaryHand
 		: SourceMesh->GetSocketTransform(WeaponBone, RTS_World).GetRelativeTransform(SourceMesh->GetSocketTransform(PrimaryHandBone, RTS_World));
 
-	const FVector WeaponViewOffset = GripProfile->GetWeaponViewOffset(bTrueFirstPerson);
-	const FTransform PinnedWeapon = FTransform(GripProfile->GetWeaponViewRotation(bTrueFirstPerson), WeaponViewOffset) * ViewToWorld;
+	// Aiming moves the weapon bone from the hip placement to the sights (same blend as the camera zoom).
+	AimBlend.Update(bAiming, GripProfile, DeltaSeconds);
+	AimAlpha = AimBlend.GetAlpha();
+	const FTransform PinnedWeapon = GripProfile->GetWeaponViewTransform(bTrueFirstPerson, AimAlpha) * ViewToWorld;
 	const FTransform WeaponWorld = ComputeWeaponSway(SourceMesh, ViewToWorld, PinnedWeapon, AnimWeaponToHand, bTrueFirstPerson && bUseLockedGrip, DeltaSeconds) * PinnedWeapon;
 	// Points laid out for the pinned weapon, carried along with the sway.
 	auto ToSwayed = [&PinnedWeapon, &WeaponWorld](const FVector& Point) { return WeaponWorld.TransformPosition(PinnedWeapon.InverseTransformPosition(Point)); };
@@ -344,9 +350,11 @@ void UFpsFirstPersonAnimInstance::UpdateWeaponGrip(const APawn* Pawn, float Delt
 		SupportHandWorld = bUseLockedGrip ? LockedSupportHandInWeapon * WeaponWorld : FromAnimation(SupportHandBone);
 		if (!FMath::IsNearlyZero(GripProfile->SupportGripRollDegrees))
 		{
-			// Roll the animated grip around the barrel axis (view X; the barrel is level with view X).
-			const FVector PivotWorld = ToSwayed(ViewToWorld.TransformPosition(GripProfile->SupportGripPivotViewOffset + (WeaponViewOffset - GripProfile->WeaponViewOffset)));
-			const FVector BarrelAxis = WeaponWorld.TransformVectorNoScale(PinnedWeapon.InverseTransformVectorNoScale(ViewToWorld.GetUnitAxis(EAxis::X)));
+			// Roll the animated grip around the barrel axis (view X at the legacy placement, which the pivot
+			// is laid out for; carried with the weapon to wherever it is now, e.g. the sights).
+			const FTransform PivotWeapon(GripProfile->WeaponViewRotation, GripProfile->WeaponViewOffset);
+			const FVector PivotWorld = WeaponWorld.TransformPosition(PivotWeapon.InverseTransformPosition(GripProfile->SupportGripPivotViewOffset));
+			const FVector BarrelAxis = WeaponWorld.TransformVectorNoScale(PivotWeapon.InverseTransformVectorNoScale(FVector::ForwardVector));
 			const FQuat Roll(BarrelAxis, FMath::DegreesToRadians(GripProfile->SupportGripRollDegrees));
 			SupportHandWorld.SetLocation(PivotWorld + Roll.RotateVector(SupportHandWorld.GetLocation() - PivotWorld));
 			SupportHandWorld.SetRotation(Roll * SupportHandWorld.GetRotation());
@@ -545,7 +553,8 @@ FTransform UFpsFirstPersonAnimInstance::ComputeWeaponSway(const USkeletalMeshCom
 	// Standing still the weapon stays where the profile frames it (posture changes in place moved it).
 	const APawn* Pawn = GetFirstPersonPawn();
 	const float SpeedFollow = Settings->WeaponSwayFullSpeed > 0.0f && Pawn ? FMath::Clamp(Pawn->GetVelocity().Size2D() / Settings->WeaponSwayFullSpeed, 0.0f, 1.0f) : 1.0f;
-	const float Follow = Settings->WeaponFollowsBody * (1.0f - ChestTurnWeight) * SpeedFollow;
+	const float AimSwayScale = GripProfile && GripProfile->bCanAim ? FMath::Lerp(1.0f, GripProfile->AimWeaponSwayScale, AimAlpha) : 1.0f;
+	const float Follow = Settings->WeaponFollowsBody * (1.0f - ChestTurnWeight) * SpeedFollow * AimSwayScale;
 	const FTransform Target = SwayReference.Inverse() * BodyWeaponInPinned;
 	const FVector Offset = Target.GetTranslation().GetClampedToMaxSize(Settings->WeaponSwayMaxOffset) * Follow;
 	FVector Axis;
@@ -567,9 +576,10 @@ FTransform UFpsFirstPersonAnimInstance::ComputeWeaponSway(const USkeletalMeshCom
 		LastSwayViewRotation = ViewRotation;
 	}
 	const float LagScale = Settings->WeaponTurnLag * 0.01f;
+	const float LagMax = Settings->WeaponTurnLagMax * AimSwayScale;
 	const FRotator LagInView(
-		FMath::Clamp(-SwayViewPitchRate * LagScale, -Settings->WeaponTurnLagMax, Settings->WeaponTurnLagMax),
-		FMath::Clamp(-SwayViewYawRate * LagScale, -Settings->WeaponTurnLagMax, Settings->WeaponTurnLagMax),
+		FMath::Clamp(-SwayViewPitchRate * LagScale * AimSwayScale, -LagMax, LagMax),
+		FMath::Clamp(-SwayViewYawRate * LagScale * AimSwayScale, -LagMax, LagMax),
 		0.0f);
 	const FQuat ViewQuat = ViewToWorld.GetRotation();
 	const FQuat PinnedQuat = PinnedWeapon.GetRotation();

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Animation/AnimInstance.h"
+#include "FpsAim.h"
 
 #include "FpsFirstPersonAnimInstance.generated.h"
 
@@ -192,6 +193,15 @@ protected:
 	};
 	FArmReach PrimaryReach;
 	FArmReach SupportReach;
+
+	/** Hip (0) to sights (1), see FpsAim; the weapon bone blends between the profile's placements. */
+	FFpsAimBlend AimBlend;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Transient, Category = "First Person|Debug")
+	float AimAlpha = 0.0f;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Transient, Category = "First Person|Debug")
+	bool bAiming = false;
 
 	FTransform ComputeWeaponSway(const USkeletalMeshComponent* SourceMesh, const FTransform& ViewToWorld, const FTransform& PinnedWeapon, const FTransform& WeaponInPrimaryHand, bool bEnabled, float DeltaSeconds);
 
