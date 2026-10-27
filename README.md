@@ -37,7 +37,7 @@ Lyra의 GAS·Enhanced Input·ReplicationGraph·Game Features 구조 위에 1인�
 ### 헤드리스 회귀 검사
 
 - 1인칭 리그를 바꿀 때마다 창 없이(`UnrealEditor-Cmd -nullrhi`) 평지 테스트 레벨에서 PIE를 고정 시간 간격으로 돌리고, 몸통-총 거리·손 미끄러짐·팔꿈치 높이·발-그림자 차이 등을 숫자로 재서 통과/실패를 냅니다.
-- 한 번에 약 26초(대부분 에디터 기동)로, 기존의 에디터 창 + 실시간 PIE 방식보다 훨씬 빠르게 확인합니다.
+- 한 번에 약 26초(대부분 에디터 기동)로, 기존의 에디터 창 + 실시간 PIE 방식보다 훨씬 빠르게 확인합니다. 스크립트와 검사 항목은 [Tools/FpRigRegression](Tools/FpRigRegression/README.md)에 있습니다.
 
 구조, 계산, 설정값, 새 무기 추가 절차, 알려진 제약은 [Docs/FirstPersonRig.md](Docs/FirstPersonRig.md)에 정리했습니다.
 
