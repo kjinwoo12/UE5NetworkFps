@@ -59,6 +59,10 @@ void ULyraCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& Desi
 	DesiredView.Location = CameraModeView.Location;
 	DesiredView.Rotation = CameraModeView.Rotation;
 	DesiredView.FOV = CameraModeView.FieldOfView;
+	// Same as UCameraComponent::GetCameraView: first person primitive FOV/scale (UE 5.5+ first person rendering).
+	DesiredView.FirstPersonFOV = bEnableFirstPersonFieldOfView ? FirstPersonFieldOfView : DesiredView.FOV;
+	DesiredView.FirstPersonScale = bEnableFirstPersonScale ? FirstPersonScale : 1.0f;
+	DesiredView.bUseFirstPersonParameters = bEnableFirstPersonFieldOfView || bEnableFirstPersonScale;
 	DesiredView.OrthoWidth = OrthoWidth;
 	DesiredView.OrthoNearClipPlane = OrthoNearClipPlane;
 	DesiredView.OrthoFarClipPlane = OrthoFarClipPlane;

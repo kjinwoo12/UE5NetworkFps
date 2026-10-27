@@ -23,11 +23,13 @@ public class FpsCoreRuntime : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
+				"DeveloperSettings",
 				"Slate",
 				"SlateCore",
 				"GameplayTags",
 				"GameplayAbilities",
 				"EnhancedInput",
+				"ControlRig",
 			}
 		);
 	}

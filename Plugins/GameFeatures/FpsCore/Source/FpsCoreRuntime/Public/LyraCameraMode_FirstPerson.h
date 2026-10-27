@@ -9,7 +9,8 @@
 /**
  * ULyraCameraMode_FirstPerson
  *
- *	First-person camera mode aligned with Lyra's eye-height pivot and control rotation.
+ *	First-person camera mode: control rotation, located at the animated head in true first person
+ *	(UFpsFirstPersonSettings), otherwise at Lyra's eye-height pivot.
  */
 UCLASS(Blueprintable)
 class ULyraCameraMode_FirstPerson : public ULyraCameraMode
@@ -23,6 +24,10 @@ public:
 protected:
 
 	virtual void UpdateView(float DeltaTime) override;
+	virtual void OnDeactivation() override;
+
+	/** Engine first person rendering parameters on the camera (UFpsFirstPersonSettings::bFirstPersonRendering). */
+	void ApplyFirstPersonRendering(bool bEnable) const;
 
 	void UpdateForTarget(float DeltaTime);
 	void SetTargetCrouchOffset(FVector NewTargetOffset);
