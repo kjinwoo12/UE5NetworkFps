@@ -4,6 +4,8 @@
 
 본인 화면의 몸·팔·총·카메라·그림자를 어떻게 만드는지 정리한다. 다른 플레이어에게 보이는 3인칭 몸은 Lyra 애니메이션 그대로이며, 이 문서의 계산은 본인 화면 전용 메시와 본인 카메라에만 적용된다.
 
+주요 결정의 배경과 버린 대안은 [설계 결정 기록](decisions/README.md)에 있다.
+
 **설계 원칙**
 
 - 몸은 3인칭 애니메이션 그대로 쓴다. 다리·골반·몸통이 그림자와 정확히 같고, 아래를 보면 자기 다리와 발이 보인다.
@@ -91,7 +93,7 @@ PrimaryHandWorld = WeaponInHand⁻¹ × WeaponWorld
 
 - 몸의 총 위치 = 애니메이션 `hand_r` × 상체 보정 × `WeaponInHand`, 고정 위치 기준.
 - 고역 통과: 이 값의 느린 평균(`WeaponSwayCenterSpeed` 2)과의 차이만 쓴다. 오래 남는 차이(서 있을 때 3.5cm 낮게 든 총)는 화면 배치를 바꾸지 않는다.
-- 크기: `WeaponSwayMaxOffset` 5cm / `WeaponSwayMaxAngle` 6°로 자르고 `WeaponFollowsBody`(0.35)를 곱한다. 1이면 뒤로 걸을 때 총구가 좌우 19cm 흔들렸다.
+- 크기: `WeaponSwayMaxOffset` 5cm / `WeaponSwayMaxAngle` 6°로 자르고 `WeaponFollowsBody`(0.25)를 곱한다. 1이면 뒤로 걸을 때 총구가 좌우 19cm 흔들렸다.
 - 이동할 때만: 지면 속도 / `WeaponSwayFullSpeed`(150cm/s). 제자리에서 앉거나 내려다볼 때 총이 화면에서 7cm 흘러갔다.
 - 빠른 회전 중에는 상체 보정 가중치(4.4)만큼 끈다(몸이 시점보다 늦어 총이 반대로 9cm 휘었다). 대신 회전 관성: 100°/s당 `WeaponTurnLag` 1°, 최대 `WeaponTurnLagMax` 2°만큼 시점보다 늦게 따라온다.
 - `WeaponSwaySmoothing`(15)으로 부드럽게 한다.
@@ -182,7 +184,7 @@ PIE 중에도 CDO 값을 바꾸면 바로 반영된다.
 |---|---|---|
 | `bTrueFirstPerson` | true | false = 레거시(6장) |
 | `EyeBone`, `EyeViewOffset` | `head`, (8, 0, 10) | 눈 위치 |
-| `WeaponFollowsBody` | 0.35 | 무기 흔들림 양(0 = 총 화면 고정) |
+| `WeaponFollowsBody` | 0.25 | 무기 흔들림 양(0 = 총 화면 고정) |
 | `WeaponSwayMaxOffset`, `WeaponSwayMaxAngle` | 5cm, 6° | 흔들림 한계 |
 | `WeaponSwaySmoothing`, `WeaponSwayCenterSpeed` | 15, 2 | 흔들림 스무딩, 고역 통과 기준의 따라가는 속도 |
 | `WeaponSwayFullSpeed` | 150cm/s | 이 속도에서 흔들림 최대, 정지 시 0 |

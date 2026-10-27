@@ -10,6 +10,7 @@ Lyra의 GAS·Enhanced Input·ReplicationGraph·Game Features 구조 위에 1인�
 | 언어 | C++ (`Source/LyraGame`, `Plugins/GameFeatures/FpsCore`) + Blueprint |
 | 목표 | 서버 권한 판정·랙 보상, GAS 예측, 데디케이티드 서버, Steam 세션이 동작하는 한 판 |
 | 기획 | [Docs/GameDesign.md](Docs/GameDesign.md) |
+| 설계 결정 | [Docs/decisions](Docs/decisions/README.md) |
 
 ## 개발 일지
 
