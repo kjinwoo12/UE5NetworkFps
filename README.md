@@ -34,10 +34,10 @@ Lyra의 GAS·Enhanced Input·ReplicationGraph·Game Features 구조 위에 1인�
 - 무기별 배치는 `UFpsWeaponGripProfile` 데이터 에셋으로 분리해서, 새 무기는 코드 수정 없이 프로파일만 추가합니다.
 - 정조준(ADS): 1인칭 카메라 모드 안에서 줌하고 총을 가늠자 자리로 블렌드합니다. 조준 태그는 복제되어 다른 플레이어에게는 3인칭 조준 자세가 보입니다.
 
-### 헤드리스 회귀 검사
+### 1인칭 리그 회귀 테스트 (Automation)
 
-- 1인칭 리그를 바꿀 때마다 창 없이(`UnrealEditor-Cmd -nullrhi`) 평지 테스트 레벨에서 PIE를 고정 시간 간격으로 돌리고, 몸통-총 거리·손 미끄러짐·팔꿈치 높이·발-그림자 차이 등을 숫자로 재서 통과/실패를 냅니다.
-- 한 번에 약 26초(대부분 에디터 기동)로, 기존의 에디터 창 + 실시간 PIE 방식보다 훨씬 빠르게 확인합니다. 스크립트와 검사 항목은 [Tools/FpRigRegression](Tools/FpRigRegression/README.md)에 있습니다.
+- 언리얼 Automation 테스트 `FpsCore.FirstPersonRig`가 평지 테스트 레벨에서 PIE를 띄워 캐릭터를 자동으로 움직이고(시점·걷기·옆걸음·앉기·회전), 몸통-총 거리·손 미끄러짐·팔꿈치 높이·발-그림자 차이 등을 숫자로 재서 통과/실패를 냅니다.
+- 에디터의 Session Frontend에서 돌리거나, 명령줄에서 창 없이(`UnrealEditor-Cmd -nullrhi`) 고정 시간 간격으로 돌립니다. 실행 방법과 검사 항목은 [Tools/FpRigRegression](Tools/FpRigRegression/README.md)에 있습니다.
 
 구조, 계산, 설정값, 새 무기 추가 절차, 알려진 제약은 [Docs/FirstPersonRig.md](Docs/FirstPersonRig.md)에 정리했습니다.
 

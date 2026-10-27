@@ -35,7 +35,7 @@ Pawn (BP_FpsHero_*)
 | 무기별 1인칭 배치 | `UFpsWeaponGripProfile` (예: `DA_Grip_Rifle`) | `/Game/FpsWeapons/` |
 | 무기 액터 표식 | `UFpsWeaponGripComponent` (예: `B_FpsRifle`의 `Grip`) | `/Game/FpsWeapons/` |
 | 로컬 총 생성·손 고정·그림자 | `UFpsFirstPersonWeaponComponent` | `FpsCoreRuntime` (Experience가 Pawn에 추가) |
-| 회귀 검사 | `fp_rig_headless.ps1`, `fp_rig_check.py`, `fp_rig_report.py` | `Tools/FpRigRegression/` |
+| 회귀 검사 | Automation 테스트 `FpsCore.FirstPersonRig` (`FpsFirstPersonRigTest.cpp`), 실행 스크립트 `run_fp_rig_test.ps1` | `FpsCoreEditor` 모듈, `Tools/FpRigRegression/` |
 | 회귀 검사 레벨 | `L_FpsRigTest` (평지, 고정 스폰) | `/FpsMaps/Maps/` |
 
 ## 2. 프레임 흐름
@@ -245,8 +245,8 @@ PIE 중에도 CDO 값을 바꾸면 바로 반영된다.
 
 1인칭 관련 코드·에셋·설정을 바꾸면 회귀 검사([Tools/FpRigRegression](../Tools/FpRigRegression/README.md))를 돌린다. 지금까지 나왔던 증상을 모두 숫자로 잰다: 몸통-총 거리, 발-그림자 차이, 그림자·머리·렌더링 레이어 설정, 손목(3인칭 대비), 손-총 미끄러짐, 정지 시 총 화면 위치, 총열 정렬, 팔꿈치 높이, 회전 중 팔꿈치 상승, 팔꿈치 위아래 흔들림(화면 기준), 팔꿈치의 총 대비 움직임, 손가락 마디 움직임, 카메라-목·어깨 거리. 사람 확인용 캡처는 `HighResShot 1600x900`으로 찍는다(PIE 뷰포트는 납작해 손이 잘림).
 
-- **실행:** `fp_rig_headless.ps1` 한 줄. 창·렌더링 없이 `UnrealEditor-Cmd -nullrhi`에서 PIE를 고정 시간 간격으로 돌리고 종료 코드로 결과를 낸다. 전체 약 26초(대부분 에디터 기동, 검사 자체는 약 5초). 예전 방식(에디터 창 + 원격 명령 + 실시간 PIE)은 기동 17초 + 검사 36초에 명령 왕복이 더해졌고, 에디터가 백그라운드면 검사만 몇 분 걸렸다.
-- **단계:** 작업 중엔 빠른 세트(`-Mode quick`, 6상태), 보고·커밋 전엔 전체(11상태).
+- **실행:** 언리얼 Automation 테스트 `FpsCore.FirstPersonRig.Quick`/`Full`(`Plugins/GameFeatures/FpsCore/Source/FpsCoreEditor/Private/Tests/FpsFirstPersonRigTest.cpp`). 에디터에서는 Session Frontend > Automation, 명령줄에서는 `Tools/FpRigRegression/run_fp_rig_test.ps1`이 `UnrealEditor-Cmd -nullrhi ... -ExecCmds="Automation RunTests FpsCore.FirstPersonRig.Full; Quit"`를 창 없이 고정 시간 간격으로 돌리고 종료 코드로 결과를 낸다. 약 40초(대부분 에디터 기동).
+- **단계:** 작업 중엔 `Quick`(6상태), 커밋 전엔 `Full`(11상태).
 - **상태 수:** 23 → 11. 검사 항목은 그대로이고, 64회 결과에서 한 번도 실패하지 않았거나 남긴 상태와 항상 같이만 실패한 상태를 뺐다.
 - **레벨:** `/FpsMaps/Maps/L_FpsRigTest`(200m 평지, 고정 스폰 `FpRigStart`). 사격장은 스폰 위치에 따라 벽·낙하로 결과가 흔들렸다.
 

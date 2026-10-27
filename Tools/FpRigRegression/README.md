@@ -4,20 +4,40 @@
 
 ## 실행
 
+검사는 언리얼 Automation 테스트 **`FpsCore.FirstPersonRig`** 입니다(`Quick` 6상태, `Full` 11상태). 코드는 [FpsFirstPersonRigTest.cpp](../../Plugins/GameFeatures/FpsCore/Source/FpsCoreEditor/Private/Tests/FpsFirstPersonRigTest.cpp)이고 FpsCore 플러그인의 에디터 모듈 `FpsCoreEditor`에 있습니다. 작업 중엔 `Quick`, 커밋 전엔 `Full`을 돌립니다.
+
+**명령줄 (창·렌더링 없음)**
+
 ```powershell
-$env:UE_ENGINE_DIR = 'D:\UE_5.8'                  # 엔진 루트 (또는 -EngineDir로 지정)
-.\Tools\FpRigRegression\fp_rig_headless.ps1 -Mode quick   # 작업 중 (6상태)
-.\Tools\FpRigRegression\fp_rig_headless.ps1               # 커밋 전 (11상태)
+$env:UE_ENGINE_DIR = 'D:\UE_5.8'                         # 엔진 루트 (또는 -EngineDir로 지정)
+.\Tools\FpRigRegression\run_fp_rig_test.ps1 -Mode Quick   # 작업 중
+.\Tools\FpRigRegression\run_fp_rig_test.ps1               # 커밋 전 (Full)
 ```
 
-`UnrealEditor-Cmd -nullrhi -unattended`를 숨김 창으로 띄우고, `fp_rig_headless.py`가 레벨 로드 → PIE → `fp_rig_check.py` → `fp_rig_report.py` → 에디터 종료까지 진행합니다. FAIL 줄과 소요 시간을 출력하고 `ALL PASS`면 종료 코드 0입니다. 결과는 `Saved/FpRigCheck/headless/`(`report.txt`, `result.json`, `editor.log`)에 남습니다. 전체 약 26초이고 대부분이 에디터 기동입니다.
+스크립트는 아래 명령을 숨김 창으로 실행하고, 끝나면 FAIL 줄과 소요 시간을 출력합니다. `ALL PASS`면 종료 코드 0입니다.
 
-- 고정 시간 간격(`-UseFixedTimeStep -FPS=50`)이라 실시간보다 빠르고, 같은 빌드면 결과가 매번 같습니다.
-- `-nullrhi`에서는 메시가 렌더링되지 않아 기본 설정(`AlwaysTickPose`) 스켈레탈 메시가 뼈를 갱신하지 않습니다. 드라이버가 PIE 메시를 `AlwaysTickPoseAndRefreshBones`로 바꾸며, 이 처리 후 `-Rendered`(오프스크린 렌더링) 결과와 리포트가 한 줄도 다르지 않았습니다.
-- PIE는 로컬 설정(리슨 서버 + 클라이언트 등)과 무관하게 `-ini:` 오버라이드로 1인 Standalone으로 돕니다. 에디터가 종료하면서 사용자 설정 파일을 덮어쓰므로 실행 전 복사본으로 되돌립니다.
-- `-ExecutePythonScript`는 스크립트가 반환되자마자 에디터를 닫으므로 `-ExecCmds="py <파일>"`을 씁니다.
+```
+UnrealEditor-Cmd UE5NetworkFps.uproject -nullrhi -unattended -nosplash -nosound -UseFixedTimeStep -FPS=50
+  -ExecCmds="Automation RunTests FpsCore.FirstPersonRig.Full; Quit" -TestExit="Automation Test Queue Empty"
+  -ReportExportPath=Saved/FpRigCheck/automation
+```
 
-에디터 안에서 직접 돌릴 수도 있습니다. `L_FpsRigTest`에서 PIE를 시작한 뒤 Python 콘솔에서 `fp_rig_check.py`를 실행하고(빠른 세트는 먼저 `FP_RIG_MODE = "quick"`), `Saved/FpRigCheck/result.json`이 갱신되면 `fp_rig_report.py`를 실행합니다. 실시간 결과는 한계값 근처 항목에서 조금 다를 수 있어서 판정은 헤드리스 결과로 합니다.
+- 먼저 에디터를 빌드하고(`LyraEditor Win64 Development`) 이 프로젝트의 GUI 에디터를 닫습니다.
+- 결과: `Saved/FpRigCheck/report_full.txt`(또는 `report_quick.txt`)에 항목마다 `PASS`/`FAIL` 한 줄과 측정값이 남고, 마지막 줄이 `ALL PASS` 또는 `N FAIL`입니다. Automation 표준 리포트는 `Saved/FpRigCheck/automation/`(`index.json`, `index.html`), 실행 로그는 `Saved/FpRigCheck/editor.log`입니다.
+- 약 40초가 걸리고 대부분은 에디터 기동입니다. 고정 시간 간격(`-UseFixedTimeStep -FPS=50`)이라 검사 자체는 실시간보다 빠르고, 같은 빌드면 결과가 매번 같습니다.
+
+**에디터 안에서**
+
+Tools > Session Frontend > Automation 탭에서 `FpsCore.FirstPersonRig.Quick` 또는 `Full`을 체크하고 Start Tests를 누릅니다. 테스트가 `L_FpsRigTest`를 열고 PIE를 띄워 캐릭터를 자동으로 움직이며, 항목별 PASS는 정보 로그로, FAIL은 에러로 남습니다. 에디터는 실시간으로 돌아서 한계값 근처 항목(손목 등)이 명령줄 결과와 조금 다를 수 있습니다. 판정은 명령줄 결과로 합니다.
+
+## 작동 방식
+
+1. **준비:** `L_FpsRigTest`를 열고, 로컬 PIE 설정(리슨 서버 + 클라이언트 등)과 무관하게 1인 Standalone PIE를 띄웁니다(`RequestPlaySession`에 별도 `ULevelEditorPlaySettings`).
+2. **자동 조작:** 레이턴트 커맨드가 매 프레임 한 번씩 돌며 상태 목록을 차례로 진행합니다. 상태마다 캐릭터를 고정 스폰 지점으로 순간이동시키고, 플레이어의 마우스·키 입력이 결국 호출하는 함수를 직접 부릅니다: `SetControlRotation`(시점. 회전 상태는 초당 각도 × 경과 시간), `AddMovementInput`(걷기·옆걸음), `Crouch`/`UnCrouch`. 키 입력 단계만 건너뛰므로 이동 컴포넌트·애니메이션·1인칭 보정 코드는 실제 플레이와 같은 경로를 탑니다.
+3. **측정:** 상태마다 1.5초(그리고 15프레임) 기다린 뒤 15프레임 동안 1인칭 몸, 3인칭 몸(그림자), 1인칭 총의 뼈·소켓 위치를 읽어 몸통-총 거리, 발-그림자 차이, 손목 각도, 팔꿈치 높이 등을 구합니다. 그림자·렌더링 레이어 같은 설정은 한 번만 확인합니다.
+4. **판정:** 아래 한계값과 비교해 항목마다 PASS/FAIL을 내고, FAIL은 Automation 에러로 올립니다.
+
+`-nullrhi`에서는 메시가 렌더링되지 않아 기본 설정(`AlwaysTickPose`) 스켈레탈 메시가 뼈를 갱신하지 않습니다. 테스트가 PIE 메시를 `AlwaysTickPoseAndRefreshBones`로 바꾸며, 오프스크린 렌더링(`-Rendered`)으로 돌린 결과와 PASS/FAIL이 모두 같았습니다(측정값 차이 0.1 이하).
 
 ## 검사 항목
 
@@ -40,7 +60,7 @@ $env:UE_ENGINE_DIR = 'D:\UE_5.8'                  # 엔진 루트 (또는 -Engin
 | 걸을 때 화면 왼쪽에 어깨가 잘려 보임 | 카메라 ↔ upperarm·upperarm_twist_01 거리 | ≥ 20cm |
 | 카메라가 목·몸 안에 들어감 | 카메라 ↔ 목·쇄골·spine_05 거리 | ≥ 14cm |
 
-한계값(`fp_rig_report.py`의 `LIMITS`)은 실제로 나왔던 증상에서 정했습니다. 수정이 통과하도록 한계값을 느슨하게 바꾸지 않습니다. 새 증상이 나오면 고치기 전에 그 증상을 재는 항목부터 추가합니다(FAIL로 재현 → 수정 → PASS).
+한계값(테스트 코드의 `FpsRig::Limits`)은 실제로 나왔던 증상에서 정했습니다. 수정이 통과하도록 한계값을 느슨하게 바꾸지 않습니다. 새 증상이 나오면 고치기 전에 그 증상을 재는 항목부터 추가합니다(FAIL로 재현 → 수정 → PASS).
 
 **상태(전체 11개):** 서기 위 60·0·아래 89, 앉아서 아래 85, 뒤로 걷기 아래 60, 앞으로 걷기 아래 85, 왼쪽·오른쪽 이동, 앉아서 뒤로 걷기 아래 60, 제자리 회전(초당 150°), 빠른 왼쪽 회전(초당 1250°). 빠른 세트(6개)는 서기 0·아래 89, 앞으로 걷기 아래 85, 왼쪽 이동, 앉아서 뒤로 걷기, 빠른 왼쪽 회전입니다. 검사 항목은 어느 세트든 전부 잽니다. 회전은 초당 각도로 주고(프레임당이면 에디터 FPS에 따라 결과가 달라짐), 상태마다 1.5초 워밍업 뒤에 잽니다.
 
