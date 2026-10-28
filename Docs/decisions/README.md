@@ -17,6 +17,7 @@
 | [0009](0009-automation-regression-test.md) | 1인칭 리그 회귀 검사는 언리얼 Automation 테스트로 만든다 | 채택 | 2026-10-27 |
 | [0010](0010-github-flow-without-pr.md) | 브랜치는 GitHub Flow를 따르되, PR 없이 main에 머지한다 | 채택 | 2026-10-27 |
 | [0011](0011-self-hosted-ci-runner.md) | 회귀 검사를 집 데스크탑 self-hosted runner에서 자동 실행한다 | 채택 | 2026-10-28 |
+| [0012](0012-team-collaboration.md) | 팀 작업은 Fork와 git flow로 나누고, GitHub Issues·Projects·마일스톤으로 추적한다 | 채택 | 2026-10-28 |
 
 ## 쓰는 법
 
