@@ -1,0 +1,15 @@
+name: 작업
+description: 해야 할 작업
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 할 일
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: 끝났다고 보는 기준
+    validations:
+      required: true

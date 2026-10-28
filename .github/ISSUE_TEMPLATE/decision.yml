@@ -1,0 +1,21 @@
+name: 의사 결정
+description: 정해야 할 것
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: 배경
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: 대안
+  - type: textarea
+    id: decision
+    attributes:
+      label: 결정
+  - type: input
+    id: adr
+    attributes:
+      label: 결정 기록(ADR) 번호
