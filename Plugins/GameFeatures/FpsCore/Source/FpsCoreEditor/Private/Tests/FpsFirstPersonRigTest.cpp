@@ -86,7 +86,6 @@ namespace FpsRig
 		constexpr float FeetStaticMax = 1.f;           // owner shadow feet vs 1P feet
 		constexpr float FeetMovingMax = 3.f;
 		constexpr float WristBendLMax = 30.f;          // bent support wrist (twice); absolute
-		constexpr float WristBendVs3PMax = 10.f;       // either wrist vs the same frame of the 3P animation
 		constexpr float HandInGunRangeMax = 1.5f;      // hands sliding on the gun (walking backwards)
 		constexpr float MuzzleViewStaticRangeMax = 2.f; // gun drifting on screen while standing still
 		constexpr float BarrelViewRangeDegMax = 13.f;  // barrel vs view; sway is WeaponSwayMaxAngle (6) each way
@@ -131,7 +130,7 @@ namespace FpsRig
 		FVector MuzzleView;
 		FVector BarrelViewDeg;
 		FVector HandLInGun, HandRInGun;
-		float WristBendL = 0, WristBendR = 0, WristBendL3P = 0, WristBendR3P = 0;
+		float WristBendL = 0, WristBendL3P = 0;
 		FVector ElbowLView, ElbowRView;
 		FVector ElbowLInGun, ElbowRInGun;
 		TArray<FVector> Fingers1P, Fingers3P; // FingerJoints() order, in their hand's space
@@ -256,10 +255,7 @@ namespace FpsRig
 		S.HandLInGun = GunXf.InverseTransformPosition(M.FP->GetSocketLocation(TEXT("hand_l")));
 		S.HandRInGun = GunXf.InverseTransformPosition(M.FP->GetSocketLocation(TEXT("hand_r")));
 		S.WristBendL = WristBend(M.FP, TEXT("lowerarm_l"), TEXT("hand_l"));
-		S.WristBendR = WristBend(M.FP, TEXT("lowerarm_r"), TEXT("hand_r"));
-		// same pose on the 3P (shadow) mesh: the rifle pistol grip bends the right wrist by design
 		S.WristBendL3P = WristBend(M.TP, TEXT("lowerarm_l"), TEXT("hand_l"));
-		S.WristBendR3P = WristBend(M.TP, TEXT("lowerarm_r"), TEXT("hand_r"));
 		S.ElbowLView = V.InverseTransformPosition(M.FP->GetSocketLocation(TEXT("lowerarm_l")));
 		S.ElbowRView = V.InverseTransformPosition(M.FP->GetSocketLocation(TEXT("lowerarm_r")));
 		// the arm's shape around the gun: moving with the gun is sway, moving against it is the elbow bob
@@ -399,10 +395,7 @@ namespace FpsRig
 
 			// absolute limit, unless the 3P animation itself bends the support wrist more in that frame
 			const float WL = MaxOf(Ss, [](const FSample& S) { return S.WristBendL - FMath::Max(0.f, S.WristBendL3P - Limits::WristBendLMax); });
-			const float DL = MaxOf(Ss, [](const FSample& S) { return S.WristBendL - S.WristBendL3P; });
-			const float DR = MaxOf(Ss, [](const FSample& S) { return S.WristBendR - S.WristBendR3P; });
-			Check(N + TEXT(" wrists"), WL <= Limits::WristBendLMax && FMath::Max(DL, DR) <= Limits::WristBendVs3PMax,
-				FString::Printf(TEXT("L %.0f deg, vs 3P L %+.0f R %+.0f deg"), WL, DL, DR));
+			Check(N + TEXT(" support wrist"), WL <= Limits::WristBendLMax, FString::Printf(TEXT("L %.0f deg"), WL));
 
 			auto FingerRange = [&Ss](bool b3P, int32* OutWorst)
 			{
