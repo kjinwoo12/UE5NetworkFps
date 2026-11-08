@@ -13,10 +13,11 @@
 | [0005](0005-engine-first-person-rendering.md) | 뷰모델은 엔진 First Person Rendering 레이어로 그린다 | 채택 | 2026-10-19 |
 | [0006](0006-event-driven-weapon-sync.md) | 로컬 1인칭 총은 이벤트로 갱신한다 | 채택 | 2026-10-26 |
 | [0007](0007-weapon-sway.md) | 총은 화면에 고정하되, 이동 중 몸의 움직임을 0.25배만 따라가게 한다 | 채택 | 2026-10-27 |
-| [0008](0008-accept-walking-wrist-fail.md) | 걸을 때 오른손목 검사 실패는 알려진 제약으로 둔다 | 채택 | 2026-10-20 |
+| [0008](0008-accept-walking-wrist-fail.md) | 걸을 때 오른손목 검사 실패는 알려진 제약으로 둔다 | 0012로 대체 | 2026-10-20 |
 | [0009](0009-automation-regression-test.md) | 1인칭 리그 회귀 검사는 언리얼 Automation 테스트로 만든다 | 채택 | 2026-10-27 |
 | [0010](0010-github-flow-without-pr.md) | 브랜치는 GitHub Flow를 따르되, PR 없이 main에 머지한다 | 채택 | 2026-10-27 |
 | [0011](0011-self-hosted-ci-runner.md) | 회귀 검사를 집 데스크탑 self-hosted runner에서 자동 실행한다 | 채택 | 2026-10-28 |
+| [0012](0012-drop-wrist-vs-3p-check.md) | 손목 검사에서 3인칭 대비 비교를 뺀다 | 채택 | 2026-10-30 |
 
 ## 쓰는 법
 
